@@ -1,0 +1,106 @@
+# Preparation scaffold. Technical pages stay draft until authoring and review.
+training:
+  id: ATS049
+  title: 'PCA: PromQL'
+  description: Preparation scaffold for PromQL. Lessons and environments are planned.
+  certification:
+    name: Prometheus Certified Associate
+    code: PCA
+    provider: CNCF / Linux Foundation
+    domain: PromQL
+    weight: 28
+    competencies:
+    - Selecting Data
+    - Rates and Derivatives
+    - Aggregating over time
+    - Aggregating over dimensions
+    - Binary operators
+    - Histograms
+    - Timestamp Metrics
+modules:
+- id: module-intro
+  title: Introduction
+  description: Planned introduction and authoring status.
+  content:
+  - type: reading
+    title: Introduction
+    path: sections/intro/README.md
+  - type: reading
+    title: Welcome To The Course
+    path: sections/intro/course-01-welcome.md
+  - type: reading
+    title: Get Your Machine Ready
+    path: sections/intro/course-02-get-your-machine-ready.md
+  - type: reading
+    title: How This Course Is Made
+    path: sections/intro/course-03-how-this-course-is-made.md
+- id: module-010
+  title: Selecting Data
+  description: Planned coverage of this curriculum objective.
+  content:
+  - type: reading
+    title: Section Overview
+    path: sections/section-010/README.md
+  - type: reading
+    title: Selecting Data
+    path: sections/section-010/module-01/course.md
+- id: module-020
+  title: Rates and Derivatives
+  description: Planned coverage of this curriculum objective.
+  content:
+  - type: reading
+    title: Section Overview
+    path: sections/section-020/README.md
+  - type: reading
+    title: Rates and Derivatives
+    path: sections/section-020/module-01/course.md
+- id: module-030
+  title: Aggregating over time
+  description: Planned coverage of this curriculum objective.
+  content:
+  - type: reading
+    title: Section Overview
+    path: sections/section-030/README.md
+  - type: reading
+    title: Aggregating over time
+    path: sections/section-030/module-01/course.md
+- id: module-040
+  title: Aggregating over dimensions
+  description: Planned coverage of this curriculum objective.
+  content:
+  - type: reading
+    title: Section Overview
+    path: sections/section-040/README.md
+  - type: reading
+    title: Aggregating over dimensions
+    path: sections/section-040/module-01/course.md
+- id: module-050
+  title: Binary operators
+  description: Planned coverage of this curriculum objective.
+  content:
+  - type: reading
+    title: Section Overview
+    path: sections/section-050/README.md
+  - type: reading
+    title: Binary operators
+    path: sections/section-050/module-01/course.md
+- id: module-060
+  title: Histograms
+  description: Planned coverage of this curriculum objective.
+  content:
+  - type: reading
+    title: Section Overview
+    path: sections/section-060/README.md
+  - type: reading
+    title: Histograms
+    path: sections/section-060/module-01/course.md
+- id: module-070
+  title: Timestamp Metrics
+  description: Planned coverage of this curriculum objective.
+  content:
+  - type: reading
+    title: Section Overview
+    path: sections/section-070/README.md
+  - type: reading
+    title: Timestamp Metrics
+    path: sections/section-070/module-01/course.md
