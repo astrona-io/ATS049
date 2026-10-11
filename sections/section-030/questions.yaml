@@ -1,0 +1,187 @@
+schema_version: 1
+kind: question_bank
+id: ats049-section-030
+course_id: ATS049
+exam_code: PCA
+status: draft
+provenance: Original practice material; not official examination questions.
+scope:
+  type: section
+  id: section-030
+  title: 'Checkpoint: Selecting PromQL Data And Evaluation Time, Counter Rates, Resets And Gauge Derivatives,
+    Aggregating Samples Across Time Windows'
+placement:
+  position: after
+  reading: sections/section-030/module-01/course-02-summary.md
+questions:
+- id: ats049-section-030-q01
+  type: single_choice
+  difficulty: beginner
+  learning_objective: Distinguish instant vectors, range vectors and range queries.
+  source_readings:
+  - sections/section-010/module-01/course-01-selecting-promql-data-and-evaluation-time.md
+  prompt: What does metric[5m] produce as an expression input?
+  options:
+  - id: a
+    text: Only one fleet-wide scalar.
+    explanation: Labels and multiple samples remain present.
+  - id: b
+    text: A range vector containing windows of samples per series.
+    explanation: The duration selects history for a range function.
+  - id: c
+    text: A dashboard refreshed every five minutes.
+    explanation: Refresh is a presentation schedule.
+  correct_option: b
+  explanation: The duration selects history for a range function.
+- id: ats049-section-030-q02
+  type: single_choice
+  difficulty: beginner
+  learning_objective: Interpret equality and anchored regular-expression matchers.
+  source_readings:
+  - sections/section-010/module-01/course-01-selecting-promql-data-and-evaluation-time.md
+  prompt: How does a regular-expression label matcher apply?
+  options:
+  - id: a
+    text: It matches the complete label value.
+    explanation: Substring matching needs a suitable surrounding pattern.
+  - id: b
+    text: It always performs an unanchored substring search.
+    explanation: PromQL label regex matchers are anchored.
+  - id: c
+    text: It changes label values before storage.
+    explanation: Matchers select rather than rewrite labels.
+  correct_option: a
+  explanation: Substring matching needs a suitable surrounding pattern.
+- id: ats049-section-030-q03
+  type: single_choice
+  difficulty: beginner
+  learning_objective: Explain lookback, staleness, offset and explicit evaluation time.
+  source_readings:
+  - sections/section-010/module-01/course-01-selecting-promql-data-and-evaluation-time.md
+  prompt: What does offset 1h change on a selector?
+  options:
+  - id: a
+    text: The target's scrape interval.
+    explanation: Query selection does not reschedule scraping.
+  - id: b
+    text: The metric's unit to hours.
+    explanation: Offset changes time selection rather than measurement units.
+  - id: c
+    text: The time from which samples are selected relative to evaluation.
+    explanation: It shifts the data selection into earlier history.
+  correct_option: c
+  explanation: It shifts the data selection into earlier history.
+- id: ats049-section-030-q04
+  type: single_choice
+  difficulty: beginner
+  learning_objective: Choose rate, increase or irate for counter questions.
+  source_readings:
+  - sections/section-020/module-01/course-01-counter-rates-resets-and-gauge-derivatives.md
+  prompt: Which expression fits requests per second from a counter?
+  options:
+  - id: a
+    text: http_requests_total alone.
+    explanation: The raw counter is cumulative rather than per-second activity.
+  - id: b
+    text: rate(http_requests_total[5m]).
+    explanation: Rate estimates counter activity per second.
+  - id: c
+    text: deriv(http_requests_total[5m]) as the default reset-aware choice.
+    explanation: Deriv is a gauge regression function and does not provide the counter reset model.
+  correct_option: b
+  explanation: Rate estimates counter activity per second.
+- id: ats049-section-030-q05
+  type: single_choice
+  difficulty: beginner
+  learning_objective: Explain reset correction and why rate precedes aggregation.
+  source_readings:
+  - sections/section-020/module-01/course-01-counter-rates-resets-and-gauge-derivatives.md
+  prompt: Why apply rate before summing instances?
+  options:
+  - id: a
+    text: Each instance's reset must be detected independently.
+    explanation: Aggregating raw counters can conceal a reset.
+  - id: b
+    text: Summation automatically resets all instances together.
+    explanation: Independent processes reset separately.
+  - id: c
+    text: Rate always removes every label automatically.
+    explanation: Rate retains series labels until an aggregation changes them.
+  correct_option: a
+  explanation: Aggregating raw counters can conceal a reset.
+- id: ats049-section-030-q06
+  type: single_choice
+  difficulty: beginner
+  learning_objective: Distinguish counter calculations from gauge delta and deriv.
+  source_readings:
+  - sections/section-020/module-01/course-01-counter-rates-resets-and-gauge-derivatives.md
+  prompt: Which measurement fits deriv more naturally?
+  options:
+  - id: a
+    text: A request counter requiring reset correction.
+    explanation: Counter-specific functions match that semantic model.
+  - id: b
+    text: A string-valued log message.
+    explanation: PromQL numerical regression does not operate on log text.
+  - id: c
+    text: A gauge such as a changing queue depth.
+    explanation: Deriv estimates a trend for values that can decrease normally.
+  correct_option: c
+  explanation: Deriv estimates a trend for values that can decrease normally.
+- id: ats049-section-030-q07
+  type: single_choice
+  difficulty: beginner
+  learning_objective: Distinguish per-series time aggregation from cross-series aggregation.
+  source_readings:
+  - sections/section-030/module-01/course-01-aggregating-samples-across-time-windows.md
+  prompt: What does max_over_time(queue_depth[10m]) calculate?
+  options:
+  - id: a
+    text: The total number of queue arrivals.
+    explanation: A maximum gauge value is not an event count.
+  - id: b
+    text: The highest collected queue-depth sample per series in the window.
+    explanation: It aggregates time within each series.
+  - id: c
+    text: The largest queue across all services automatically.
+    explanation: Cross-series grouping requires another operation.
+  correct_option: b
+  explanation: It aggregates time within each series.
+- id: ats049-section-030-q08
+  type: single_choice
+  difficulty: beginner
+  learning_objective: Choose avg, max, count and present-over-time functions appropriately.
+  source_readings:
+  - sections/section-030/module-01/course-01-aggregating-samples-across-time-windows.md
+  prompt: Why can avg_over_time be misleading with irregular sampling?
+  options:
+  - id: a
+    text: It averages observed samples rather than universally weighting elapsed duration.
+    explanation: Uneven observations can affect the interpretation.
+  - id: b
+    text: It always invents missing values as zero.
+    explanation: Missing samples are not automatically zero observations.
+  - id: c
+    text: It returns a log message rather than a number.
+    explanation: The function produces metric results.
+  correct_option: a
+  explanation: Uneven observations can affect the interpretation.
+- id: ats049-section-030-q09
+  type: single_choice
+  difficulty: beginner
+  learning_objective: Explain sample weighting and missing observations.
+  source_readings:
+  - sections/section-030/module-01/course-01-aggregating-samples-across-time-windows.md
+  prompt: What does count_over_time count?
+  options:
+  - id: a
+    text: All customer requests between scrapes.
+    explanation: Sample count and event count differ.
+  - id: b
+    text: Every currently discovered target.
+    explanation: Discovery is a separate population.
+  - id: c
+    text: The samples present in each selected range.
+    explanation: It does not count business events stored inside a counter value.
+  correct_option: c
+  explanation: It does not count business events stored inside a counter value.
