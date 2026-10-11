@@ -1,0 +1,243 @@
+schema_version: 1
+kind: question_bank
+id: ats049-domain-review
+course_id: ATS049
+exam_code: PCA
+status: draft
+provenance: Original practice material; not official examination questions.
+scope:
+  type: domain
+  id: domain-review
+  title: PromQL
+placement:
+  position: after
+  reading: sections/section-070/module-01/course-02-summary.md
+questions:
+- id: ats049-domain-review-q01
+  type: single_choice
+  difficulty: intermediate
+  learning_objective: Interpret by and without grouping.
+  source_readings:
+  - sections/section-040/module-01/course-01-aggregating-across-labels-without-losing-meaning.md
+  prompt: What does sum by (service) preserve?
+  options:
+  - id: a
+    text: Only the original metric name under all circumstances.
+    explanation: Aggregation changes result identity and should not rely on that assumption.
+  - id: b
+    text: The service grouping label.
+    explanation: Other dimensions are removed from the grouped result.
+  - id: c
+    text: Every original instance label automatically.
+    explanation: By explicitly chooses retained grouping dimensions.
+  correct_option: b
+  explanation: Other dimensions are removed from the grouped result.
+- id: ats049-domain-review-q02
+  type: single_choice
+  difficulty: intermediate
+  learning_objective: Explain weighted ratios and aggregation order.
+  source_readings:
+  - sections/section-040/module-01/course-01-aggregating-across-labels-without-losing-meaning.md
+  prompt: How should a fleet error ratio usually combine unequal-traffic instances?
+  options:
+  - id: a
+    text: Sum error rates and divide by summed request rates.
+    explanation: That weights each instance by its request volume.
+  - id: b
+    text: Average instance error percentages equally.
+    explanation: A quiet instance would receive the same weight as a busy one.
+  - id: c
+    text: Add error percentages without a denominator.
+    explanation: That does not represent a meaningful fleet fraction.
+  correct_option: a
+  explanation: That weights each instance by its request volume.
+- id: ats049-domain-review-q03
+  type: single_choice
+  difficulty: intermediate
+  learning_objective: Preserve labels needed for ownership and later matching.
+  source_readings:
+  - sections/section-040/module-01/course-01-aggregating-across-labels-without-losing-meaning.md
+  prompt: Why retain an ownership label in an alert aggregation?
+  options:
+  - id: a
+    text: It increases the counter reset correction automatically.
+    explanation: Reset handling comes from rate before aggregation.
+  - id: b
+    text: It makes every alert always true.
+    explanation: Labels identify results rather than determine the numerical condition alone.
+  - id: c
+    text: It supports routing and identifies the responsible population.
+    explanation: Removing it can make distinct service failures indistinguishable.
+  correct_option: c
+  explanation: Removing it can make distinct service failures indistinguishable.
+- id: ats049-domain-review-q04
+  type: single_choice
+  difficulty: intermediate
+  learning_objective: Distinguish arithmetic, filtering comparisons and set operators.
+  source_readings:
+  - sections/section-050/module-01/course-01-binary-operators-and-vector-matching.md
+  prompt: What does a comparison normally do without bool?
+  options:
+  - id: a
+    text: Delete stored historical samples.
+    explanation: Query filtering does not mutate storage.
+  - id: b
+    text: Filter vector samples according to the comparison.
+    explanation: It does not universally replace values with one or zero.
+  - id: c
+    text: Always emit one for every existing series.
+    explanation: That describes a different bool result model.
+  correct_option: b
+  explanation: It does not universally replace values with one or zero.
+- id: ats049-domain-review-q05
+  type: single_choice
+  difficulty: intermediate
+  learning_objective: Explain default label matching and on or ignoring modifiers.
+  source_readings:
+  - sections/section-050/module-01/course-01-binary-operators-and-vector-matching.md
+  prompt: Why can two visually related vectors produce no division result?
+  options:
+  - id: a
+    text: Their labels do not match under the selected matching rule.
+    explanation: Arithmetic pairs series according to labels.
+  - id: b
+    text: Every division of vectors is forbidden.
+    explanation: Compatible vectors can be divided.
+  - id: c
+    text: Dashboards cannot show fractions.
+    explanation: The problem is expression matching rather than display capability.
+  correct_option: a
+  explanation: Arithmetic pairs series according to labels.
+- id: ats049-domain-review-q06
+  type: single_choice
+  difficulty: intermediate
+  learning_objective: Interpret group_left and group_right cardinality requirements.
+  source_readings:
+  - sections/section-050/module-01/course-01-binary-operators-and-vector-matching.md
+  prompt: What is required for group_left many-to-one matching?
+  options:
+  - id: a
+    text: Every right-side series can match every left-side series.
+    explanation: That would leave the numerical relationship ambiguous.
+  - id: b
+    text: All labels must be deleted from the stored data.
+    explanation: Matching modifiers operate in the query.
+  - id: c
+    text: The matching right side must be unique for each match key.
+    explanation: The modifier does not permit arbitrary ambiguous many-to-many arithmetic.
+  correct_option: c
+  explanation: The modifier does not permit arbitrary ambiguous many-to-many arithmetic.
+- id: ats049-domain-review-q07
+  type: single_choice
+  difficulty: intermediate
+  learning_objective: Interpret cumulative classic buckets, count and sum.
+  source_readings:
+  - sections/section-060/module-01/course-01-histogram-buckets-quantiles-and-distribution-aggregation.md
+  prompt: What does a classic bucket with le equal to 0.3 count?
+  options:
+  - id: a
+    text: Only observations greater than 0.3.
+    explanation: The boundary is an upper bound.
+  - id: b
+    text: Observations no greater than 0.3 in the metric's unit.
+    explanation: Buckets are cumulative upper-bound counts.
+  - id: c
+    text: Only observations exactly equal to 0.3.
+    explanation: A bucket includes a range of values.
+  correct_option: b
+  explanation: Buckets are cumulative upper-bound counts.
+- id: ats049-domain-review-q08
+  type: single_choice
+  difficulty: intermediate
+  learning_objective: Calculate compatible fleet quantiles and mean duration.
+  source_readings:
+  - sections/section-060/module-01/course-01-histogram-buckets-quantiles-and-distribution-aggregation.md
+  prompt: Which label must remain when aggregating classic buckets for histogram_quantile?
+  options:
+  - id: a
+    text: le.
+    explanation: It identifies the cumulative bucket boundaries.
+  - id: b
+    text: Every individual request ID.
+    explanation: That is not the classic bucket boundary.
+  - id: c
+    text: Only the dashboard panel title.
+    explanation: Display labels do not establish histogram structure.
+  correct_option: a
+  explanation: It identifies the cumulative bucket boundaries.
+- id: ats049-domain-review-q09
+  type: single_choice
+  difficulty: intermediate
+  learning_objective: Distinguish summary quantiles from aggregatable histogram evidence.
+  source_readings:
+  - sections/section-060/module-01/course-01-histogram-buckets-quantiles-and-distribution-aggregation.md
+  prompt: Why should per-instance summary percentiles not be averaged as a fleet percentile?
+  options:
+  - id: a
+    text: All instances necessarily serve equal traffic.
+    explanation: Traffic can differ, and even equal weighting does not reconstruct the distribution.
+  - id: b
+    text: Quantiles are always exact raw event lists.
+    explanation: They are estimates rather than retained complete event records.
+  - id: c
+    text: Percentiles do not compose by ordinary averaging.
+    explanation: The underlying distributions and populations are needed.
+  correct_option: c
+  explanation: The underlying distributions and populations are needed.
+- id: ats049-domain-review-q10
+  type: single_choice
+  difficulty: intermediate
+  learning_objective: Distinguish a timestamp-valued gauge from a sample timestamp.
+  source_readings:
+  - sections/section-070/module-01/course-01-event-timestamps-sample-freshness-and-overdue-work.md
+  prompt: What does a last-success timestamp gauge describe?
+  options:
+  - id: a
+    text: A counter's total number of successes.
+    explanation: A timestamp is not an event count.
+  - id: b
+    text: The time of the producer's successful event.
+    explanation: Its value is separate from collection time.
+  - id: c
+    text: The scrape interval in seconds.
+    explanation: That is collector scheduling configuration.
+  correct_option: b
+  explanation: Its value is separate from collection time.
+- id: ats049-domain-review-q11
+  type: single_choice
+  difficulty: intermediate
+  learning_objective: Use time and timestamp functions for different age questions.
+  source_readings:
+  - sections/section-070/module-01/course-01-event-timestamps-sample-freshness-and-overdue-work.md
+  prompt: Which expression conceptually measures time since the last successful event?
+  options:
+  - id: a
+    text: time() minus the timestamp-valued gauge.
+    explanation: It compares current evaluation time with the stored event-time value.
+  - id: b
+    text: timestamp(metric) alone.
+    explanation: That returns sample timing rather than the contained event-time age.
+  - id: c
+    text: rate of the event timestamp as a request counter.
+    explanation: The timestamp gauge does not have counter event semantics.
+  correct_option: a
+  explanation: It compares current evaluation time with the stored event-time value.
+- id: ats049-domain-review-q12
+  type: single_choice
+  difficulty: intermediate
+  learning_objective: Account for clock errors, missing series and observation delay.
+  source_readings:
+  - sections/section-070/module-01/course-01-event-timestamps-sample-freshness-and-overdue-work.md
+  prompt: Why can an event-age expression be negative?
+  options:
+  - id: a
+    text: Negative age proves extra successful events occurred.
+    explanation: It is not an event-count measurement.
+  - id: b
+    text: Prometheus necessarily deleted all earlier data.
+    explanation: That does not explain a future event-time value.
+  - id: c
+    text: The producer clock or reported event time can be ahead of evaluation time.
+    explanation: Clock consistency is part of the interpretation.
+  correct_option: c
+  explanation: Clock consistency is part of the interpretation.

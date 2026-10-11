@@ -1,0 +1,166 @@
+version: 1
+approval: PCA requested 2026-10-11; established reading-only scope
+course:
+  id: ATS049
+  certification:
+    name: Prometheus Certified Associate
+    code: PCA
+    provider: CNCF / Linux Foundation
+    domain: PromQL
+    weight: 28
+    competencies:
+    - Selecting Data
+    - Rates and Derivatives
+    - Aggregating over time
+    - Aggregating over dimensions
+    - Binary operators
+    - Histograms
+    - Timestamp Metrics
+defaults:
+  playground: false
+  module_lab: false
+  capstone: false
+  section_quiz: false
+  final_quiz: true
+assessment_format: YAML question banks v1, registered in assessments/index.yaml
+sections:
+- id: section-010
+  title: Selecting Data
+  curriculum_item: Selecting Data
+  capstone: false
+  section_quiz: false
+  modules:
+  - id: module-01
+    title: Selecting PromQL Data And Evaluation Time
+    objectives:
+    - Distinguish instant vectors, range vectors and range queries.
+    - Interpret equality and anchored regular-expression matchers.
+    - Explain lookback, staleness, offset and explicit evaluation time.
+    - Choose selectors whose labels match the intended population.
+    outline:
+    - Selecting PromQL Data And Evaluation Time
+    playground: false
+    module_lab: false
+    sources:
+    - reading: sections/section-010/module-01/course-01-selecting-promql-data-and-evaluation-time.md
+      adapted_from: null
+- id: section-020
+  title: Rates and Derivatives
+  curriculum_item: Rates and Derivatives
+  capstone: false
+  section_quiz: false
+  modules:
+  - id: module-01
+    title: Counter Rates, Resets And Gauge Derivatives
+    objectives:
+    - Choose rate, increase or irate for counter questions.
+    - Explain reset correction and why rate precedes aggregation.
+    - Distinguish counter calculations from gauge delta and deriv.
+    - Interpret extrapolation, window length and insufficient samples.
+    outline:
+    - Counter Rates, Resets And Gauge Derivatives
+    playground: false
+    module_lab: false
+    sources:
+    - reading: sections/section-020/module-01/course-01-counter-rates-resets-and-gauge-derivatives.md
+      adapted_from: null
+- id: section-030
+  title: Aggregating over time
+  curriculum_item: Aggregating over time
+  capstone: false
+  section_quiz: true
+  modules:
+  - id: module-01
+    title: Aggregating Samples Across Time Windows
+    objectives:
+    - Distinguish per-series time aggregation from cross-series aggregation.
+    - Choose avg, max, count and present-over-time functions appropriately.
+    - Explain sample weighting and missing observations.
+    - Interpret subqueries and derived expression windows.
+    outline:
+    - Aggregating Samples Across Time Windows
+    playground: false
+    module_lab: false
+    sources:
+    - reading: sections/section-030/module-01/course-01-aggregating-samples-across-time-windows.md
+      adapted_from: null
+- id: section-040
+  title: Aggregating over dimensions
+  curriculum_item: Aggregating over dimensions
+  capstone: false
+  section_quiz: false
+  modules:
+  - id: module-01
+    title: Aggregating Across Labels Without Losing Meaning
+    objectives:
+    - Interpret by and without grouping.
+    - Choose sum, average, count and ranking operations by measurement meaning.
+    - Explain weighted ratios and aggregation order.
+    - Preserve labels needed for ownership and later matching.
+    outline:
+    - Aggregating Across Labels Without Losing Meaning
+    playground: false
+    module_lab: false
+    sources:
+    - reading: sections/section-040/module-01/course-01-aggregating-across-labels-without-losing-meaning.md
+      adapted_from: null
+- id: section-050
+  title: Binary operators
+  curriculum_item: Binary operators
+  capstone: false
+  section_quiz: false
+  modules:
+  - id: module-01
+    title: Binary Operators And Vector Matching
+    objectives:
+    - Distinguish arithmetic, filtering comparisons and set operators.
+    - Explain default label matching and on or ignoring modifiers.
+    - Interpret group_left and group_right cardinality requirements.
+    - Handle unmatched series and zero denominators explicitly.
+    outline:
+    - Binary Operators And Vector Matching
+    playground: false
+    module_lab: false
+    sources:
+    - reading: sections/section-050/module-01/course-01-binary-operators-and-vector-matching.md
+      adapted_from: null
+- id: section-060
+  title: Histograms
+  curriculum_item: Histograms
+  capstone: false
+  section_quiz: false
+  modules:
+  - id: module-01
+    title: Histogram Buckets, Quantiles And Distribution Aggregation
+    objectives:
+    - Interpret cumulative classic buckets, count and sum.
+    - Calculate compatible fleet quantiles and mean duration.
+    - Distinguish summary quantiles from aggregatable histogram evidence.
+    - Explain bucket approximation and native-histogram representation.
+    outline:
+    - Histogram Buckets, Quantiles And Distribution Aggregation
+    playground: false
+    module_lab: false
+    sources:
+    - reading: sections/section-060/module-01/course-01-histogram-buckets-quantiles-and-distribution-aggregation.md
+      adapted_from: null
+- id: section-070
+  title: Timestamp Metrics
+  curriculum_item: Timestamp Metrics
+  capstone: false
+  section_quiz: false
+  modules:
+  - id: module-01
+    title: Event Timestamps, Sample Freshness And Overdue Work
+    objectives:
+    - Distinguish a timestamp-valued gauge from a sample timestamp.
+    - Use time and timestamp functions for different age questions.
+    - Define overdue-work alerts with ownership and lifecycle context.
+    - Account for clock errors, missing series and observation delay.
+    outline:
+    - Event Timestamps, Sample Freshness And Overdue Work
+    playground: false
+    module_lab: false
+    sources:
+    - reading: sections/section-070/module-01/course-01-event-timestamps-sample-freshness-and-overdue-work.md
+      adapted_from: null
