@@ -37,7 +37,7 @@ modules:
 - id: module-010
   title: Selecting Data
   description: Developed reading and reasoning for Selecting Data.
-  status: alpha
+  maturity: alpha
   content:
   - type: reading
     title: Selecting Data
@@ -76,7 +76,7 @@ modules:
 - id: module-020
   title: Rates and Derivatives
   description: Developed reading and reasoning for Rates and Derivatives.
-  status: alpha
+  maturity: alpha
   content:
   - type: reading
     title: Rates and Derivatives
@@ -134,7 +134,7 @@ modules:
 - id: module-030
   title: Aggregating over time
   description: Developed reading and reasoning for Aggregating over time.
-  status: alpha
+  maturity: alpha
   content:
   - type: reading
     title: Aggregating over time
@@ -173,7 +173,7 @@ modules:
 - id: module-040
   title: Aggregating over dimensions
   description: Developed reading and reasoning for Aggregating over dimensions.
-  status: alpha
+  maturity: alpha
   content:
   - type: reading
     title: Aggregating over dimensions
@@ -212,7 +212,7 @@ modules:
 - id: module-050
   title: Binary operators
   description: Developed reading and reasoning for Binary operators.
-  status: alpha
+  maturity: alpha
   content:
   - type: reading
     title: Binary operators
@@ -251,7 +251,7 @@ modules:
 - id: module-060
   title: Histograms
   description: Developed reading and reasoning for Histograms.
-  status: alpha
+  maturity: alpha
   content:
   - type: reading
     title: Histograms
@@ -309,7 +309,7 @@ modules:
 - id: module-070
   title: Timestamp Metrics
   description: Developed reading and reasoning for Timestamp Metrics.
-  status: alpha
+  maturity: alpha
   content:
   - type: reading
     title: Timestamp Metrics
