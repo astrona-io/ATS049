@@ -1,0 +1,69 @@
+# yaml-language-server: $schema=https://cli.astrona.io/schema/lab-config.schema.json
+#
+# Binary Operators Capstone (LAB). Graded against the live Prometheus server. UNTESTED: built
+# without a live run.
+apiVersion: astrona.io/v1
+metadata:
+  name: ats-049-capstone-050
+  docs:
+    prerequisites: prerequisites.md
+    question: question.md
+    solution: solution.md
+
+runtime:
+  type: kind
+  kind:
+    image: kindest/node:v1.35.8
+    preloadImages:
+      - quay.io/prometheus/prometheus:v3.5.5
+      - docker.io/library/python:3.13-alpine
+
+bootstrap:
+  manifests:
+    - name: lab-start
+      type: file
+      source: manifests/lab-start.yaml
+  waitFor:
+    - resource: deploy/prometheus
+      namespace: starfleet
+    - resource: deploy/shuttle
+      namespace: starfleet
+
+# Applied only by `astrona test`: the reference solution (writes the answers).
+testing:
+  init:
+    - name: apply-solution
+      description: Write the reference answers
+      type: file
+      source: solution/apply.sh
+
+validation:
+  scripts:
+    - name: c1-error-ratio-per-job
+      description: "c1: error ratio per job"
+      type: file
+      source: validation/validate-q1.sh
+      hint: "Use sum by (job) around rate() on both sides of the division, with status=\"500\" on the left only."
+    - name: c2-budget-burn
+      description: "c2: error ratio divided by the error budget of the job"
+      type: file
+      source: validation/validate-q2.sh
+      hint: "Divide the ratio from the first question by error_budget_ratio. Both sides have only the label job."
+    - name: c3-stale-backups-up
+      description: "c3: backups older than 30 minutes on instances that are up"
+      type: file
+      source: validation/validate-q3.sh
+      hint: "Calculate the age with time(), filter it with > 1800, then keep the instances with and on(instance) up == 1."
+    - name: c4-annotated-queue
+      description: "c4: queue depth above 26 with version and team"
+      type: file
+      source: validation/validate-q4.sh
+      hint: "Filter first, then chain two many-to-one matches with group_left(version) and group_left(team). Use parentheses around the filter."
+    - name: c5-targets-down
+      description: "c5: number of targets that are down"
+      type: file
+      source: validation/validate-q5.sh
+      hint: "Filter up == 0 and count the result, at evaluation time 1767228300."
+
+teardown:
+  keepCluster: false

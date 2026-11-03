@@ -1,0 +1,31 @@
+# yaml-language-server: $schema=https://cli.astrona.io/schema/lab-config.schema.json
+#
+# Counters, rate And increase (PLAYGROUND). Clean sandbox: a Prometheus server with a fixed
+# generated dataset, nothing to submit. UNTESTED: built without a live run.
+apiVersion: astrona.io/v1
+metadata:
+  name: ats-049-playground-020-01
+  docs:
+    guide: docs/overview.md
+
+runtime:
+  type: kind
+  kind:
+    image: kindest/node:v1.35.8
+    preloadImages:
+      - quay.io/prometheus/prometheus:v3.5.5
+      - docker.io/library/python:3.13-alpine
+
+bootstrap:
+  manifests:
+    - name: prometheus-environment
+      type: file
+      source: manifests/prometheus.yaml
+  waitFor:
+    - resource: deploy/prometheus
+      namespace: starfleet
+    - resource: deploy/shuttle
+      namespace: starfleet
+
+teardown:
+  keepCluster: false

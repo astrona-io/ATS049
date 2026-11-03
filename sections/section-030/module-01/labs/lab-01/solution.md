@@ -1,89 +1,73 @@
----
-draft: true
-exam_objectives:
-- Aggregating over time
----
-# Summarise A Gauge Over Time Solution
+# Solution
 
-Use a host shell with the private kubeconfig for this independent kind environment. A kubeconfig identifies the cluster and credentials used by kubectl, the Kubernetes command-line tool.
+Solve this lab on `terminal`. Each step ends with `astrona submit`. The `--keep` flag keeps the lab running so that you can continue after a failed check. The values below come from the dataset formulas, not from a recorded run: compare them with your own output.
+
+Start the lab if it is not running:
 
 ```sh
-export KUBECONFIG="$(astrona kubeconfig ats-049-lab-030-01-01)"
-test "$(kubectl config current-context)" = "kind-astro-ats-049-lab-030-01-01" || exit 1
-node_name="astro-ats-049-lab-030-01-01-control-plane"
-worker_name="astro-ats-049-lab-030-01-01-worker"
+astrona run --git ssh://git@github.com/astrona-io/ATS049.git -c sections/section-030/module-01/labs/lab-01
 ```
 
-Keep this connection selected. Host-level commands name only this environment's node containers. They do not operate on the host operating system.
+## Step 1: Lowest queue depth in 10 minutes
 
-## Inspect And Explain
-
-One instrumented probe serves metrics and structured request logs. A traffic generator makes ten percent of requests fail. Prometheus scrapes every two seconds; no evidence report or learner rule exists.
-
-Inspect the current objects before changing them:
+`min_over_time` returns the smallest sample of each series in the window. The window must be `10m`: the gauge of `bridge-0:8080` has a cycle of 10 minutes, and a `5m` window misses its low point.
 
 ```sh
-kubectl -n starfleet get pods -o wide
-kubectl get nodes -o wide
+kubectl -n starfleet exec deploy/shuttle -- python /tools/pq.py 'min_over_time(queue_depth[10m])'
 ```
 
-Average samples from one queue gauge over a time window. Missing samples are not fabricated as zero.
+You should see:
 
-Use the expression `avg_over_time(lab_queue_depth[20s])`. The report needs `expression`, `evaluated_at` and `data`. Data is the Prometheus API data object, not only the printed value. Wait for at least twenty seconds of collected traffic before using a rate. Record evidence within five minutes of submission. Changing the expression or claiming an empty result fails.
-
-Record observations in `starfleet/evidence`, whose `report.json` contains the stated report. The verifier reads the live API again; invented values do not pass.
-
-
-Save this as `record.py`:
-
-```python
-import json,subprocess,time,sys,tempfile,os
-
-def call(*args):
- r=subprocess.run(list(args),text=True,capture_output=True,timeout=20)
- assert r.returncode==0, 'Observation command failed: '+args[0]
- return r.stdout.strip()
-def obj(kind,name,ns='starfleet'):
- return json.loads(call('kubectl',*(['-n',ns] if ns else []),'get',kind,name,'-o','json'))
-def api(path):
- script='import urllib.request; print(urllib.request.urlopen('+repr('http://prometheus:9090'+path)+',timeout=8).read().decode())'
- return json.loads(call('kubectl','-n','starfleet','exec','shuttle','--','python','-c',script))
-def save(data):
- resource={'apiVersion':'v1','kind':'ConfigMap','metadata':{'name':'evidence','namespace':'starfleet'},'data':{'report.json':json.dumps(data,sort_keys=True)}}
- with tempfile.NamedTemporaryFile(mode='w',suffix='.json',delete=False) as f:json.dump(resource,f);path=f.name
- try:call('kubectl','apply','-f',path)
- finally:os.unlink(path)
-
-assert call('kubectl','config','current-context') == 'kind-astro-ats-049-lab-030-01-01'
-import urllib.parse
-stamp=time.time()
-expression='avg_over_time(lab_queue_depth[20s])'
-answer=api('/api/v1/query?'+urllib.parse.urlencode({'query':expression,'time':stamp}))
-assert answer['status']=='success' and answer['data']['result'], 'Wait for enough scrapes'
-report={'expression':expression,'evaluated_at':stamp,'data':answer['data']}
-save(report)
+```text
+{instance="bridge-0:8080", job="bridge"} 10
+{instance="bridge-1:8080", job="bridge"} 25
+{instance="shuttle-0:8080", job="shuttle"} 202
 ```
 
-Apply the scoped correction:
+`shuttle-0:8080` rises by 2 per step, and its oldest sample in the window, at step 201, is 202.
+
+## Step 2: The 0.9 quantile of the temperature
+
+`quantile_over_time` takes the quantile first and the range vector second:
 
 ```sh
-python3 record.py
+kubectl -n starfleet exec deploy/shuttle -- python /tools/pq.py 'quantile_over_time(0.9, temperature_celsius[10m])'
 ```
 
-## Verify The Result
+The result has one line, for `probe-0:9100`, with a value close to 43.61. The series `probe-1:9100` has no sample in the last 10 minutes, so it does not appear. The 40 samples of `probe-0:9100` rise by 0.1 per step from 40.1 to 44, and 90 percent of them lie below about 43.6.
 
-Observe the actual result. A denied request returns a nonzero status when the denial works, so run it separately from a shell sequence that stops on error. Status convergence and a successful request establish different parts of the result.
+## Step 3: Spread of the bridge queue
+
+Put the label matcher in the selector and use a `5m` range:
 
 ```sh
-kubectl -n starfleet get configmaps
-kubectl -n starfleet get deployment probe -o yaml
+kubectl -n starfleet exec deploy/shuttle -- python /tools/pq.py 'stddev_over_time(queue_depth{job="bridge"}[5m])'
 ```
 
-Evaluate the required expression and preserve its labels, values and evaluation time. The commands above deliberately target one environment. Keep its remaining components available so an unrelated failure cannot stand in for the required denial or correction. No example command output is presented as evidence of a completed run. A matching field alone does not establish that a process used it or that a controller reconciled it.
+You should see two lines. The value for `bridge-0:8080` should be close to 5.77, and the value for `bridge-1:8080` is 0, because that gauge is constant.
 
-After recording your result, remove the independent lab with `astrona destroy ats-049-lab-030-01-01`.
+## Step 4: The newest temperature of every probe
 
-## Common pitfalls
+`last_over_time` looks back as far as its range, and it keeps the metric name. A `15m` window reaches the last sample of `probe-1:9100`, which is at Unix time 1767228600:
 
-> [!WARNING]
-> Confirm the private context and exact node names before a change. Check the stated scope and live result. Do not change unrelated components to hide the original fault.
+```sh
+kubectl -n starfleet exec deploy/shuttle -- python /tools/pq.py 'last_over_time(temperature_celsius[15m])'
+```
+
+You should see two lines with the name `temperature_celsius`. The value for `probe-0:9100` is 44, and the value for `probe-1:9100` is 20, from the formula 30 - 0.05 * 200.
+
+## Store the answers and submit
+
+Store the four expressions in the ConfigMap `answers`, the same way as in the task:
+
+```sh
+kubectl -n starfleet create configmap answers \
+  --from-literal=q1='min_over_time(queue_depth[10m])' \
+  --from-literal=q2='quantile_over_time(0.9, temperature_celsius[10m])' \
+  --from-literal=q3='stddev_over_time(queue_depth{job="bridge"}[5m])' \
+  --from-literal=q4='last_over_time(temperature_celsius[15m])' \
+  --dry-run=client -o yaml | kubectl apply -f -
+astrona submit --git ssh://git@github.com/astrona-io/ATS049.git -c sections/section-030/module-01/labs/lab-01
+```
+
+Each check prints `PASS` or a reason for the failure.

@@ -1,0 +1,255 @@
+# Knowledge check for section 030. Listed in astrona.yaml as a `type: quiz` entry after the capstone lab.
+schema_version: 1
+kind: question_bank
+id: ats049-030
+course_id: ATS049
+exam_code: PCA
+status: draft
+provenance: Original practice material written for this course; not official exam questions.
+scope:
+  type: section
+  id: section-030
+  title: "Aggregating Over Time"
+placement:
+  position: after
+  reading: sections/section-030/capstone/labs/lab-01/question.md
+questions:
+  - id: ats049-030-q01
+    type: single_choice
+    difficulty: beginner
+    learning_objective: "State what max_over_time returns for a range vector"
+    source_readings:
+      - sections/section-030/module-01/course-01-aggregating-a-gauge-over-a-window.md
+    prompt: "What does `max_over_time(queue_depth[5m])` return?"
+    options:
+      - id: a
+        text: "A range vector with the highest sample of each minute."
+        explanation: "This option is not correct. An over_time function reduces the window of each series to one value. It keeps the other labels, drops the metric name, and never mixes series."
+      - id: b
+        text: "One value for each input series, the highest sample in the window, without the metric name."
+        explanation: "Correct. An over_time function reduces the window of each series to one value. It keeps the other labels, drops the metric name, and never mixes series."
+      - id: c
+        text: "One value for all series together, the highest sample of any series."
+        explanation: "This option is not correct. An over_time function reduces the window of each series to one value. It keeps the other labels, drops the metric name, and never mixes series."
+    correct_option: b
+    explanation: "An over_time function reduces the window of each series to one value. It keeps the other labels, drops the metric name, and never mixes series."
+
+  - id: ats049-030-q02
+    type: single_choice
+    difficulty: beginner
+    learning_objective: "Count the samples in a window with count_over_time"
+    source_readings:
+      - sections/section-030/module-01/course-01-aggregating-a-gauge-over-a-window.md
+    prompt: "The samples of `queue_depth` are 15 seconds apart. How many samples does `count_over_time(queue_depth[5m])` count for a series that has data all the time?"
+    options:
+      - id: a
+        text: "21, because a sample exactly 5 minutes old is included."
+        explanation: "This option is not correct. A range is left-open and right-closed. A window of 5 minutes holds 300 seconds divided by 15 seconds, which is 20 samples, and the sample exactly 5 minutes old is not counted."
+      - id: b
+        text: "5, because the window is 5 minutes."
+        explanation: "This option is not correct. A range is left-open and right-closed. A window of 5 minutes holds 300 seconds divided by 15 seconds, which is 20 samples, and the sample exactly 5 minutes old is not counted."
+      - id: c
+        text: "20, because the left boundary of the range is excluded."
+        explanation: "Correct. A range is left-open and right-closed. A window of 5 minutes holds 300 seconds divided by 15 seconds, which is 20 samples, and the sample exactly 5 minutes old is not counted."
+    correct_option: c
+    explanation: "A range is left-open and right-closed. A window of 5 minutes holds 300 seconds divided by 15 seconds, which is 20 samples, and the sample exactly 5 minutes old is not counted."
+
+  - id: ats049-030-q03
+    type: single_choice
+    difficulty: beginner
+    learning_objective: "Write quantile_over_time with the quantile as the first argument"
+    source_readings:
+      - sections/section-030/module-01/course-02-quantiles-spread-last-value-and-presence.md
+    prompt: "Which expression returns the 0.9 quantile of the temperature over the last 10 minutes for each series?"
+    options:
+      - id: a
+        text: "`quantile_over_time(temperature_celsius[10m], 0.9)`"
+        explanation: "This option is not correct. The quantile comes first, as a number from 0 to 1, and the range vector comes second. A value above 1 returns positive infinity."
+      - id: b
+        text: "`quantile_over_time(0.9, temperature_celsius[10m])`"
+        explanation: "Correct. The quantile comes first, as a number from 0 to 1, and the range vector comes second. A value above 1 returns positive infinity."
+      - id: c
+        text: "`quantile_over_time(90, temperature_celsius[10m])`"
+        explanation: "This option is not correct. The quantile comes first, as a number from 0 to 1, and the range vector comes second. A value above 1 returns positive infinity."
+    correct_option: b
+    explanation: "The quantile comes first, as a number from 0 to 1, and the range vector comes second. A value above 1 returns positive infinity."
+
+  - id: ats049-030-q04
+    type: single_choice
+    difficulty: intermediate
+    learning_objective: "Use last_over_time to reach back further than the lookback delta"
+    source_readings:
+      - sections/section-030/module-01/course-02-quantiles-spread-last-value-and-presence.md
+    prompt: "The series `probe-1:9100` of `temperature_celsius` has no sample in the last 10 minutes. What does `last_over_time(temperature_celsius[15m])` return for it, compared with the plain selector `temperature_celsius`?"
+    options:
+      - id: a
+        text: "Its newest sample with the metric name, while the plain selector returns nothing for it."
+        explanation: "Correct. An instant selector looks back 5 minutes. `last_over_time` looks back as far as its range, here 15 minutes, and it keeps the metric name, unlike the other over_time functions."
+      - id: b
+        text: "Nothing, because both forms use the lookback delta of 5 minutes."
+        explanation: "This option is not correct. An instant selector looks back 5 minutes. `last_over_time` looks back as far as its range, here 15 minutes, and it keeps the metric name, unlike the other over_time functions."
+      - id: c
+        text: "Its newest sample without the metric name, while the plain selector also returns it."
+        explanation: "This option is not correct. An instant selector looks back 5 minutes. `last_over_time` looks back as far as its range, here 15 minutes, and it keeps the metric name, unlike the other over_time functions."
+    correct_option: a
+    explanation: "An instant selector looks back 5 minutes. `last_over_time` looks back as far as its range, here 15 minutes, and it keeps the metric name, unlike the other over_time functions."
+
+  - id: ats049-030-q05
+    type: single_choice
+    difficulty: intermediate
+    learning_objective: "Read the result of absent_over_time"
+    source_readings:
+      - sections/section-030/module-01/course-02-quantiles-spread-last-value-and-presence.md
+    prompt: "What does `absent_over_time(up{job=\"probe\",instance=\"probe-1:9100\"}[10m])` return when the series has no sample in the last 10 minutes?"
+    options:
+      - id: a
+        text: "An empty result."
+        explanation: "This option is not correct. `absent_over_time` returns 1 when the range holds no sample. It builds the labels from the equality matchers of the selector. When samples exist, it returns an empty result."
+      - id: b
+        text: "A single series with the value 1 and the labels `job` and `instance` taken from the equality matchers."
+        explanation: "Correct. `absent_over_time` returns 1 when the range holds no sample. It builds the labels from the equality matchers of the selector. When samples exist, it returns an empty result."
+      - id: c
+        text: "A single series with the value 0 and no labels."
+        explanation: "This option is not correct. `absent_over_time` returns 1 when the range holds no sample. It builds the labels from the equality matchers of the selector. When samples exist, it returns an empty result."
+    correct_option: b
+    explanation: "`absent_over_time` returns 1 when the range holds no sample. It builds the labels from the equality matchers of the selector. When samples exist, it returns an empty result."
+
+  - id: ats049-030-q06
+    type: single_choice
+    difficulty: intermediate
+    learning_objective: "Apply the left-open boundary to present_over_time"
+    source_readings:
+      - sections/section-030/module-01/course-02-quantiles-spread-last-value-and-presence.md
+    prompt: "The newest sample of `probe-1:9100` is exactly 10 minutes old at the evaluation time. What does `present_over_time(up[10m])` return for this series?"
+    options:
+      - id: a
+        text: "1, because the range includes the sample on its left boundary."
+        explanation: "This option is not correct. A range selector is left-open and right-closed, so a sample that lies exactly one range back is not in the window. `present_over_time` returns 1 only for series that have at least one sample in the window."
+      - id: b
+        text: "0, because the target is down."
+        explanation: "This option is not correct. A range selector is left-open and right-closed, so a sample that lies exactly one range back is not in the window. `present_over_time` returns 1 only for series that have at least one sample in the window."
+      - id: c
+        text: "Nothing, because the range excludes a sample exactly 10 minutes old."
+        explanation: "Correct. A range selector is left-open and right-closed, so a sample that lies exactly one range back is not in the window. `present_over_time` returns 1 only for series that have at least one sample in the window."
+    correct_option: c
+    explanation: "A range selector is left-open and right-closed, so a sample that lies exactly one range back is not in the window. `present_over_time` returns 1 only for series that have at least one sample in the window."
+
+  - id: ats049-030-q07
+    type: single_choice
+    difficulty: intermediate
+    learning_objective: "Choose a window that holds at least one sample"
+    source_readings:
+      - sections/section-030/module-01/course-03-choosing-the-window-and-avoiding-misleading-averages.md
+    prompt: "A series has a sample every 15 seconds. What happens with `count_over_time(queue_depth[10s])`?"
+    options:
+      - id: a
+        text: "It returns 1 for some evaluation times and no series for others, because a window shorter than the scrape interval can hold no sample."
+        explanation: "Correct. A window shorter than the interval between samples holds one sample or none, depending on the evaluation time. Series then come and go in the result. Choose a window of at least several scrape intervals."
+      - id: b
+        text: "It returns 1 at every evaluation time, because there is always a current sample."
+        explanation: "This option is not correct. A window shorter than the interval between samples holds one sample or none, depending on the evaluation time. Series then come and go in the result. Choose a window of at least several scrape intervals."
+      - id: c
+        text: "It returns 0 at every evaluation time."
+        explanation: "This option is not correct. A window shorter than the interval between samples holds one sample or none, depending on the evaluation time. Series then come and go in the result. Choose a window of at least several scrape intervals."
+    correct_option: a
+    explanation: "A window shorter than the interval between samples holds one sample or none, depending on the evaluation time. Series then come and go in the result. Choose a window of at least several scrape intervals."
+
+  - id: ats049-030-q08
+    type: single_choice
+    difficulty: intermediate
+    learning_objective: "Avoid averaging a counter"
+    source_readings:
+      - sections/section-030/module-01/course-03-choosing-the-window-and-avoiding-misleading-averages.md
+    prompt: "Why does `avg_over_time(http_requests_total[10m])` not tell you how busy a service was?"
+    options:
+      - id: a
+        text: "It returns the number of requests per second, but with the wrong unit."
+        explanation: "This option is not correct. A counter only grows, so its average is a running total from the middle of the window and not a measure of activity. Use `rate()` or `increase()` on the counter instead."
+      - id: b
+        text: "It fails with an error, because the function accepts only gauges."
+        explanation: "This option is not correct. A counter only grows, so its average is a running total from the middle of the window and not a measure of activity. Use `rate()` or `increase()` on the counter instead."
+      - id: c
+        text: "It averages the running total, which is a value at some point in the window and breaks at counter restarts. `rate()` or `increase()` measures the activity."
+        explanation: "Correct. A counter only grows, so its average is a running total from the middle of the window and not a measure of activity. Use `rate()` or `increase()` on the counter instead."
+    correct_option: c
+    explanation: "A counter only grows, so its average is a running total from the middle of the window and not a measure of activity. Use `rate()` or `increase()` on the counter instead."
+
+  - id: ats049-030-q09
+    type: single_choice
+    difficulty: beginner
+    learning_objective: "Read the syntax of a subquery"
+    source_readings:
+      - sections/section-030/module-02/course-01-subquery-syntax-and-evaluation-times.md
+    prompt: "What does `queue_depth[5m:1m]` return?"
+    options:
+      - id: a
+        text: "A range vector with the result of the expression `queue_depth` at every step time of the last 5 minutes, with a step of 1 minute."
+        explanation: "Correct. The syntax is `expr[range:step]`. Prometheus evaluates the expression at every step time inside the range and collects the results as the points of a range vector."
+      - id: b
+        text: "A range vector that holds the samples of the last 5 minutes, one per minute, taken from the stored samples."
+        explanation: "This option is not correct. The syntax is `expr[range:step]`. Prometheus evaluates the expression at every step time inside the range and collects the results as the points of a range vector."
+      - id: c
+        text: "An instant vector with the average of 5 minutes."
+        explanation: "This option is not correct. The syntax is `expr[range:step]`. Prometheus evaluates the expression at every step time inside the range and collects the results as the points of a range vector."
+    correct_option: a
+    explanation: "The syntax is `expr[range:step]`. Prometheus evaluates the expression at every step time inside the range and collects the results as the points of a range vector."
+
+  - id: ats049-030-q10
+    type: single_choice
+    difficulty: intermediate
+    learning_objective: "State the default step of a subquery"
+    source_readings:
+      - sections/section-030/module-02/course-01-subquery-syntax-and-evaluation-times.md
+    prompt: "You leave out the step and write `queue_depth[5m:]`. Which step does Prometheus use?"
+    options:
+      - id: a
+        text: "The scrape interval of the target."
+        explanation: "This option is not correct. The default step is the global `evaluation_interval` of the server that runs the query. It is 1 minute in a default installation and 15 seconds in the playground, so the same query can return different points on different servers."
+      - id: b
+        text: "The global evaluation interval of the server."
+        explanation: "Correct. The default step is the global `evaluation_interval` of the server that runs the query. It is 1 minute in a default installation and 15 seconds in the playground, so the same query can return different points on different servers."
+      - id: c
+        text: "One minute on every server."
+        explanation: "This option is not correct. The default step is the global `evaluation_interval` of the server that runs the query. It is 1 minute in a default installation and 15 seconds in the playground, so the same query can return different points on different servers."
+    correct_option: b
+    explanation: "The default step is the global `evaluation_interval` of the server that runs the query. It is 1 minute in a default installation and 15 seconds in the playground, so the same query can return different points on different servers."
+
+  - id: ats049-030-q11
+    type: single_choice
+    difficulty: intermediate
+    learning_objective: "Compare a maximum of sums with a sum of maximums"
+    source_readings:
+      - sections/section-030/module-02/course-02-nesting-time-aggregation-with-aggregates-and-rates.md
+    prompt: "How do `max_over_time(sum by (job) (queue_depth)[5m:1m])` and `sum by (job) (max_over_time(queue_depth[5m]))` differ?"
+    options:
+      - id: a
+        text: "The first returns the highest total at one step time. The second adds the peaks of the series, which can happen at different times, so it is never smaller and can be larger."
+        explanation: "Correct. The order of the layers is part of the meaning. The first form adds the series at each moment and then takes the peak. The second takes the peak of each series and then adds the peaks, which can come from different times."
+      - id: b
+        text: "They always return the same value."
+        explanation: "This option is not correct. The order of the layers is part of the meaning. The first form adds the series at each moment and then takes the peak. The second takes the peak of each series and then adds the peaks, which can come from different times."
+      - id: c
+        text: "The first returns the sum of the peaks and the second returns the highest total."
+        explanation: "This option is not correct. The order of the layers is part of the meaning. The first form adds the series at each moment and then takes the peak. The second takes the peak of each series and then adds the peaks, which can come from different times."
+    correct_option: a
+    explanation: "The order of the layers is part of the meaning. The first form adds the series at each moment and then takes the peak. The second takes the peak of each series and then adds the peaks, which can come from different times."
+
+  - id: ats049-030-q12
+    type: single_choice
+    difficulty: advanced
+    learning_objective: "Explain why a counter must not be summed before rate"
+    source_readings:
+      - sections/section-030/module-02/course-03-cost-recording-rules-and-nesting-pitfalls.md
+    prompt: "One instance of a job restarts, so its counters start again from 0. What is wrong with `rate(sum by (job) (http_requests_total)[10m:1m])`?"
+    options:
+      - id: a
+        text: "Nothing. The sum of counters is also a counter, so the rate is correct."
+        explanation: "This option is not correct. A sum hides the reset of one series inside the total of several. Apply `rate()` or `increase()` to each counter series first, then aggregate."
+      - id: b
+        text: "The subquery step is too short, and a longer step fixes the result."
+        explanation: "This option is not correct. A sum hides the reset of one series inside the total of several. Apply `rate()` or `increase()` to each counter series first, then aggregate."
+      - id: c
+        text: "The sum drops at the restart, `rate()` treats the drop as a counter reset and adds the whole earlier total, so the rate is far too high. Apply `rate()` to each series first and then sum."
+        explanation: "Correct. A sum hides the reset of one series inside the total of several. Apply `rate()` or `increase()` to each counter series first, then aggregate."
+    correct_option: c
+    explanation: "A sum hides the reset of one series inside the total of several. Apply `rate()` or `increase()` to each counter series first, then aggregate."

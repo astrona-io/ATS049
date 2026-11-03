@@ -1,0 +1,65 @@
+# yaml-language-server: $schema=https://cli.astrona.io/schema/lab-config.schema.json
+#
+# Means, Fractions And Native Histograms (LAB). Graded against the live Prometheus server. UNTESTED: built
+# without a live run.
+apiVersion: astrona.io/v1
+metadata:
+  name: ats-049-lab-060-02
+  docs:
+    prerequisites: prerequisites.md
+    question: question.md
+    solution: solution.md
+
+runtime:
+  type: kind
+  kind:
+    image: kindest/node:v1.35.8
+    preloadImages:
+      - quay.io/prometheus/prometheus:v3.5.5
+      - docker.io/library/python:3.13-alpine
+
+bootstrap:
+  manifests:
+    - name: lab-start
+      type: file
+      source: manifests/lab-start.yaml
+  waitFor:
+    - resource: deploy/prometheus
+      namespace: starfleet
+    - resource: deploy/shuttle
+      namespace: starfleet
+
+# Applied only by `astrona test`: the reference solution (writes the answers).
+testing:
+  init:
+    - name: apply-solution
+      description: Write the reference answers
+      type: file
+      source: solution/apply.sh
+
+# One check per task; each reads one key of the ConfigMap answers.
+validation:
+  scripts:
+    - name: q1-mean-per-instance
+      description: "q1 returns the mean duration per instance over 5 minutes"
+      type: file
+      source: validation/validate-q1-mean-per-instance.sh
+      hint: "Divide the rate of _sum by the rate of _count and reduce both sides to the label instance with sum by (instance)."
+    - name: q2-mean-overall
+      description: "q2 returns the mean duration of all instances together"
+      type: file
+      source: validation/validate-q2-mean-overall.sh
+      hint: "Sum the rate of _sum and the rate of _count over all instances first, then divide once. Do not use avg."
+    - name: q3-share-under-025
+      description: "q3 returns the share of requests at or under 0.25 seconds per instance"
+      type: file
+      source: validation/validate-q3-share-under-025.sh
+      hint: "Use the bucket le='0.25' divided by the _count rate. Reduce both sides to instance with sum by (instance) so that the labels match."
+    - name: q4-share-over-1s
+      description: "q4 returns the share of requests slower than 1 second for the whole service"
+      type: file
+      source: validation/validate-q4-share-over-1s.sh
+      hint: "Slower than 1 second is everything that is not in the bucket le='1'. Subtract the share at or under 1 second from 1, with summed rates."
+
+teardown:
+  keepCluster: false

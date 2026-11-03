@@ -1,31 +1,65 @@
+# yaml-language-server: $schema=https://cli.astrona.io/schema/lab-config.schema.json
+#
+# Classic Histograms And histogram_quantile (LAB). Graded against the live Prometheus server. UNTESTED: built
+# without a live run.
 apiVersion: astrona.io/v1
 metadata:
-  name: ats-049-lab-060-01-01
+  name: ats-049-lab-060-01
   docs:
-    prerequisites: docs/prerequisites.md
-    examQuestion: question.md
-    caseStudy: docs/case-study.md
-    guide: solution.md
+    prerequisites: prerequisites.md
+    question: question.md
+    solution: solution.md
+
 runtime:
   type: kind
   kind:
-    image: kindest/node:v1.35.0@sha256:452d707d4862f52530247495d180205e029056831160e22870e37e3f6c1ac31f
-    nodes:
-      workers: 1
+    image: kindest/node:v1.35.8
+    preloadImages:
+      - quay.io/prometheus/prometheus:v3.5.5
+      - docker.io/library/python:3.13-alpine
+
 bootstrap:
-  init:
-  - name: seed-private-environment
-    type: file
-    source: bootstrap/setup.sh
-teardown:
-  keepCluster: false
+  manifests:
+    - name: lab-start
+      type: file
+      source: manifests/lab-start.yaml
+  waitFor:
+    - resource: deploy/prometheus
+      namespace: starfleet
+    - resource: deploy/shuttle
+      namespace: starfleet
+
+# Applied only by `astrona test`: the reference solution (writes the answers).
 testing:
   init:
-  - name: reference-result
-    type: file
-    source: solution/apply.sh
+    - name: apply-solution
+      description: Write the reference answers
+      type: file
+      source: solution/apply.sh
+
+# One check per task; each reads one key of the ConfigMap answers.
 validation:
-  script:
-    name: verify-fields-and-live-evidence
-    type: file
-    source: validate.sh
+  scripts:
+    - name: q1-p90-per-instance
+      description: "q1 returns the 0.9 quantile per instance from 5 minute bucket rates"
+      type: file
+      source: validation/validate-q1-p90-per-instance.sh
+      hint: "Take rate of the bucket series, aggregate with sum by (instance, le), then call histogram_quantile(0.9, ...)."
+    - name: q2-p90-fleet
+      description: "q2 returns the 0.9 quantile of all instances together"
+      type: file
+      source: validation/validate-q2-p90-fleet.sh
+      hint: "Add the bucket rates of both instances with sum by (le) before histogram_quantile. Do not average quantiles."
+    - name: q3-p90-fleet-across-reset
+      description: "q3 returns the fleet 0.9 quantile at the time of the bridge-1 reset window"
+      type: file
+      source: validation/validate-q3-p90-fleet-across-reset.sh
+      hint: "The same expression as the fleet quantile, tested with --time 1767227475. rate handles the counter reset; the window must be 5m."
+    - name: q4-observations-between-bounds
+      description: "q4 returns the observations of bridge-0 between 0.25 and 0.5 seconds"
+      type: file
+      source: validation/validate-q4-observations-between-bounds.sh
+      hint: "Buckets are cumulative: subtract the le='0.25' bucket from the le='0.5' bucket and ignore le in the matching."
+
+teardown:
+  keepCluster: false

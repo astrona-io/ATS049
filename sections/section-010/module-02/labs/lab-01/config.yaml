@@ -1,0 +1,70 @@
+# yaml-language-server: $schema=https://cli.astrona.io/schema/lab-config.schema.json
+#
+# Time-Shift Questions (LAB). Graded against the live Prometheus server. UNTESTED: built
+# without a live run.
+apiVersion: astrona.io/v1
+metadata:
+  name: ats-049-lab-010-02
+  docs:
+    prerequisites: prerequisites.md
+    question: question.md
+    solution: solution.md
+
+runtime:
+  type: kind
+  kind:
+    image: kindest/node:v1.35.8
+    preloadImages:
+      - quay.io/prometheus/prometheus:v3.5.5
+      - docker.io/library/python:3.13-alpine
+
+bootstrap:
+  manifests:
+    - name: lab-start
+      type: file
+      source: manifests/lab-start.yaml
+  waitFor:
+    - resource: deploy/prometheus
+      namespace: starfleet
+    - resource: deploy/shuttle
+      namespace: starfleet
+
+# Applied only by `astrona test`: the reference solution (writes the answers).
+testing:
+  init:
+    - name: apply-solution
+      description: Write the reference answers
+      type: file
+      source: solution/apply.sh
+
+# One check per answer key.
+validation:
+  scripts:
+    - name: answer-q1
+      description: "queue_depth ten minutes before the evaluation time"
+      type: file
+      source: validation/validate-q1.sh
+      hint: "Add the offset modifier directly after the selector."
+    - name: answer-q2
+      description: "queue_depth pinned to 1767227385"
+      type: file
+      source: validation/validate-q2.sh
+      hint: "Use the @ modifier with the timestamp in seconds, directly after the selector."
+    - name: answer-q3
+      description: "growth of the shuttle queue since the start of a range"
+      type: file
+      source: validation/validate-q3.sh
+      hint: "Subtract the same selector pinned with @ start()."
+    - name: answer-q4
+      description: "shuttle queue ten minutes after the evaluation time"
+      type: file
+      source: validation/validate-q4.sh
+      hint: "A negative offset moves the selector forward in time."
+    - name: answer-q5
+      description: "probe-1 up five minutes before 1767228900"
+      type: file
+      source: validation/validate-q5.sh
+      hint: "Combine @ 1767228900 and offset 5m on the same selector. The offset counts from the @ time."
+
+teardown:
+  keepCluster: false

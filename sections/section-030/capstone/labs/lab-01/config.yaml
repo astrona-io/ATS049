@@ -1,0 +1,70 @@
+# yaml-language-server: $schema=https://cli.astrona.io/schema/lab-config.schema.json
+#
+# Aggregating Over Time Capstone (LAB). Graded against the live Prometheus server. UNTESTED: built
+# without a live run.
+apiVersion: astrona.io/v1
+metadata:
+  name: ats-049-capstone-030
+  docs:
+    prerequisites: prerequisites.md
+    question: question.md
+    solution: solution.md
+
+runtime:
+  type: kind
+  kind:
+    image: kindest/node:v1.35.8
+    preloadImages:
+      - quay.io/prometheus/prometheus:v3.5.5
+      - docker.io/library/python:3.13-alpine
+
+bootstrap:
+  manifests:
+    - name: lab-start
+      type: file
+      source: manifests/lab-start.yaml
+  waitFor:
+    - resource: deploy/prometheus
+      namespace: starfleet
+    - resource: deploy/shuttle
+      namespace: starfleet
+
+# Applied only by `astrona test`: the reference solution (writes the answers).
+testing:
+  init:
+    - name: apply-solution
+      description: Write the reference answers
+      type: file
+      source: solution/apply.sh
+
+# One entry per validation script.
+validation:
+  scripts:
+    - name: peak-disk-usage
+      description: "q1 returns the highest disk usage of every probe disk over 30 minutes"
+      type: file
+      source: validation/validate-peak-disk-usage.sh
+      hint: "A gauge selector has a range, so max_over_time(disk_used_bytes[30m]) needs no subquery. One probe stopped reporting 10 minutes ago and must still appear."
+    - name: silent-probe
+      description: "q2 returns a result only for the probe that sent no sample in the last 10 minutes"
+      type: file
+      source: validation/validate-silent-probe.sh
+      hint: "absent_over_time returns 1 when the selector has no sample in the range. Use equality matchers for job and instance, so that they appear in the result."
+    - name: queue-total-spread
+      description: "q3 returns the standard deviation of the total queue depth of each job over 30 minutes"
+      type: file
+      source: validation/validate-queue-total-spread.sh
+      hint: "Sum by job first and spread second: stddev_over_time of a subquery over sum by (job) (queue_depth), range 30m, step 1m."
+    - name: peak-error-rate
+      description: "q4 returns the highest one minute rate of status 500 responses of each job over 30 minutes"
+      type: file
+      source: validation/validate-peak-error-rate.sh
+      hint: "Apply rate() to each series of http_requests_total with status 500, add them with sum by (job), and wrap them in a subquery with a 1m step."
+    - name: fewest-targets-total
+      description: "q5 returns the lowest number of targets that were up in each job over 30 minutes"
+      type: file
+      source: validation/validate-fewest-targets-total.sh
+      hint: "Add the up values with sum by (job) inside the subquery, and take min_over_time outside. Do not use min by."
+
+teardown:
+  keepCluster: false

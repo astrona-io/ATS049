@@ -1,0 +1,315 @@
+# Final domain knowledge check across all seven sections.
+schema_version: 1
+kind: question_bank
+id: ats049-final
+course_id: ATS049
+exam_code: PCA
+status: draft
+provenance: Original practice material written for this course; not official exam questions.
+scope:
+  type: domain
+  id: promql
+  title: "PromQL"
+placement:
+  position: after
+  reading: sections/section-070/capstone/labs/lab-01/question.md
+questions:
+  - id: ats049-final-010-q01
+    type: single_choice
+    difficulty: beginner
+    learning_objective: "Select by metric name with __name__"
+    source_readings:
+      - sections/section-010/module-01/course-02-the-four-label-matchers.md
+    prompt: "Which selector returns the series of `build_info` and `team_info` without writing a metric name in front of the braces?"
+    options:
+      - id: a
+        text: "`{name=~\"build_info|team_info\"}`"
+        explanation: "This option is not correct. The metric name is stored in the label `__name__`, and a regular expression matcher on it selects several metrics. The labels `name` and `job` do not hold the metric name."
+      - id: b
+        text: "`{__name__=~\"build_info|team_info\"}`"
+        explanation: "Correct. The metric name is stored in the label `__name__`, and a regular expression matcher on it selects several metrics. The labels `name` and `job` do not hold the metric name."
+      - id: c
+        text: "`{job=~\"build_info|team_info\"}`"
+        explanation: "This option is not correct. The metric name is stored in the label `__name__`, and a regular expression matcher on it selects several metrics. The labels `name` and `job` do not hold the metric name."
+    correct_option: b
+    explanation: "The metric name is stored in the label `__name__`, and a regular expression matcher on it selects several metrics. The labels `name` and `job` do not hold the metric name."
+
+  - id: ats049-final-010-q02
+    type: single_choice
+    difficulty: intermediate
+    learning_objective: "Pin a selector with @ start() and @ end()"
+    source_readings:
+      - sections/section-010/module-02/course-02-offset-and-the-at-modifier.md
+    prompt: "In an instant query, which time does `@ end()` resolve to?"
+    options:
+      - id: a
+        text: "The time of the newest sample in the database"
+        explanation: "This option is not correct. In an instant query both `start()` and `end()` are the evaluation time. In a range query they are the start and end of the range."
+      - id: b
+        text: "The end of the current day"
+        explanation: "This option is not correct. In an instant query both `start()` and `end()` are the evaluation time. In a range query they are the start and end of the range."
+      - id: c
+        text: "The evaluation time of the query"
+        explanation: "Correct. In an instant query both `start()` and `end()` are the evaluation time. In a range query they are the start and end of the range."
+    correct_option: c
+    explanation: "In an instant query both `start()` and `end()` are the evaluation time. In a range query they are the start and end of the range."
+
+  - id: ats049-final-020-q01
+    type: single_choice
+    difficulty: intermediate
+    learning_objective: "Choose between rate() and irate() for a long window"
+    source_readings:
+      - sections/section-020/module-01/course-02-increase-irate-and-what-each-returns.md
+    prompt: "A dashboard shows request speed over days with a graph step of 5 minutes, and the graph must not jump with every short spike. Which function fits?"
+    options:
+      - id: a
+        text: "`rate(http_requests_total[5m])`"
+        explanation: "Correct. `rate()` averages over the whole range, so the line is smoother. `irate()` shows the speed of the last two samples."
+      - id: b
+        text: "`irate(http_requests_total[5m])`"
+        explanation: "This option is not correct. `irate()` uses only the last two samples at each step, so the graph follows every spike."
+      - id: c
+        text: "`increase(http_requests_total[5m])`"
+        explanation: "This option is not correct. `increase()` returns a count over the range and not a speed per second."
+    correct_option: a
+    explanation: "`rate()` averages over the whole range, so the line is smoother. `irate()` shows the speed of the last two samples."
+
+  - id: ats049-final-020-q02
+    type: single_choice
+    difficulty: intermediate
+    learning_objective: "Count falls of a gauge with resets() and changes() correctly"
+    source_readings:
+      - sections/section-020/module-02/course-03-changes-resets-and-choosing-the-function.md
+    prompt: "A gauge goes 10, 14, 14, 9, 9, 12 in six samples of a range. What do `changes()` and `resets()` return?"
+    options:
+      - id: a
+        text: "`changes()` returns 5 and `resets()` returns 1."
+        explanation: "This option is not correct. The value stays equal in two of the five gaps, so those gaps are not changes."
+      - id: b
+        text: "`changes()` returns 3 and `resets()` returns 3."
+        explanation: "This option is not correct. Only one gap goes down, from 14 to 9, so `resets()` returns 1."
+      - id: c
+        text: "`changes()` returns 3 and `resets()` returns 1."
+        explanation: "Correct. The values change in the gaps 10 to 14, 14 to 9 and 9 to 12, which is 3 changes. Only the step from 14 to 9 goes down, so there is 1 reset."
+    correct_option: c
+    explanation: "The values change in the gaps 10 to 14, 14 to 9 and 9 to 12, which is 3 changes. Only the step from 14 to 9 goes down, so there is 1 reset."
+
+  - id: ats049-final-030-q01
+    type: single_choice
+    difficulty: intermediate
+    learning_objective: "State the step times of a subquery"
+    source_readings:
+      - sections/section-030/module-02/course-01-subquery-syntax-and-evaluation-times.md
+    prompt: "The step is 30 seconds. Which points does `queue_depth[1m:30s]` return at the evaluation time 1767229190?"
+    options:
+      - id: a
+        text: "The times 1767229140 and 1767229170, the multiples of 30 seconds that lie inside the range."
+        explanation: "Correct. The step times are multiples of the step on the Unix time axis, not counted from the evaluation time. The range is left-open and right-closed, so the times lie in the interval from 1767229130 up to and including 1767229190."
+      - id: b
+        text: "The times 1767229130 and 1767229160, counted back from the evaluation time in steps of 30 seconds."
+        explanation: "This option is not correct. The step times are multiples of the step on the Unix time axis, not counted from the evaluation time. The range is left-open and right-closed, so the times lie in the interval from 1767229130 up to and including 1767229190."
+      - id: c
+        text: "The times 1767229170 and 1767229190, the evaluation time and one step before it."
+        explanation: "This option is not correct. The step times are multiples of the step on the Unix time axis, not counted from the evaluation time. The range is left-open and right-closed, so the times lie in the interval from 1767229130 up to and including 1767229190."
+    correct_option: a
+    explanation: "The step times are multiples of the step on the Unix time axis, not counted from the evaluation time. The range is left-open and right-closed, so the times lie in the interval from 1767229130 up to and including 1767229190."
+
+  - id: ats049-final-030-q02
+    type: single_choice
+    difficulty: advanced
+    learning_objective: "Explain what a subquery does with a stopped series"
+    source_readings:
+      - sections/section-030/module-02/course-02-nesting-time-aggregation-with-aggregates-and-rates.md
+    prompt: "The instance `probe-1:9100` stopped reporting 10 minutes ago. Why can `min_over_time(sum by (job) (up)[30m:1m])` return 1 for the job `probe`, while `sum by (job) (min_over_time(up[30m]))` returns 2?"
+    options:
+      - id: a
+        text: "Both forms are wrong, and the correct value is 0."
+        explanation: "This option is not correct. Functions that work on each series separately do not see that a series ended. The subquery evaluates the sum at each moment, so the sum drops when one series is no longer returned."
+      - id: b
+        text: "The first form sums the series that exist at each step time, so after the lookback delta ends it sees one series. The second form takes the minimum of each series separately and does not see that a series ended."
+        explanation: "Correct. Functions that work on each series separately do not see that a series ended. The subquery evaluates the sum at each moment, so the sum drops when one series is no longer returned."
+      - id: c
+        text: "The second form ignores series that stopped, so it counts only one of them."
+        explanation: "This option is not correct. Functions that work on each series separately do not see that a series ended. The subquery evaluates the sum at each moment, so the sum drops when one series is no longer returned."
+    correct_option: b
+    explanation: "Functions that work on each series separately do not see that a series ended. The subquery evaluates the sum at each moment, so the sum drops when one series is no longer returned."
+
+  - id: ats049-final-040-q01
+    type: single_choice
+    difficulty: intermediate
+    learning_objective: "Use count_values to count how many series have each value"
+    source_readings:
+      - sections/section-040/module-02/course-02-quantile-stddev-count-values.md
+    prompt: "The `up` series of five targets have the values 1, 1, 0, 1 and 1. What does `count_values(\"state\", up)` return?"
+    options:
+      - id: a
+        text: "Two series: `{state=\"1\"}` with 4 and `{state=\"0\"}` with 1."
+        explanation: "Correct. It returns one series for each distinct value, with the value as text in the new label and the count as the value."
+      - id: b
+        text: "One series with the value 4."
+        explanation: "This describes `sum(up)`. `count_values` keeps each distinct value apart."
+      - id: c
+        text: "Five series, one for each target, with the label `state`."
+        explanation: "`count_values` drops the other labels and groups equal values."
+    correct_option: a
+    explanation: "Correct. It returns one series for each distinct value, with the value as text in the new label and the count as the value."
+
+  - id: ats049-final-040-q02
+    type: single_choice
+    difficulty: advanced
+    learning_objective: "Choose an aggregation that shows a failing instance instead of hiding it"
+    source_readings:
+      - sections/section-040/module-02/course-03-correct-averaging-and-hidden-failures.md
+    prompt: "One of five targets is down. Which expression shows it for each job and does not hide it behind other targets?"
+    options:
+      - id: a
+        text: "`avg(up)`"
+        explanation: "The average stays close to 1 and does not say which job fails."
+      - id: b
+        text: "`count by (job) (up)`"
+        explanation: "This counts reporting targets, and a failed target still reports."
+      - id: c
+        text: "`min by (job) (up)`"
+        explanation: "Correct. The minimum is 0 for every job that has a failed target."
+    correct_option: c
+    explanation: "Correct. The minimum is 0 for every job that has a failed target."
+
+  - id: ats049-final-050-q01
+    type: single_choice
+    difficulty: intermediate
+    learning_objective: "Use and, or and unless to keep, add or remove series by their labels"
+    source_readings:
+      - sections/section-050/module-02/course-03-set-operators.md
+    prompt: "`count(up == 0)` returns an empty result when no target is down. Which expression returns the value 0 in that case and the real count otherwise?"
+    options:
+      - id: a
+        text: "`count(up == 0) + 0`"
+        explanation: "This option is not correct. The operator `or` returns the left side and adds the series of the right side whose label sets are missing on the left. `vector(0)` has no labels, so it appears only when the left side is empty. Adding 0 to an empty result stays empty."
+      - id: b
+        text: "`count(up == 0) or vector(0)`"
+        explanation: "Correct. The operator `or` returns the left side and adds the series of the right side whose label sets are missing on the left. `vector(0)` has no labels, so it appears only when the left side is empty. Adding 0 to an empty result stays empty."
+      - id: c
+        text: "`count(up == 0) and vector(0)`"
+        explanation: "This option is not correct. The operator `or` returns the left side and adds the series of the right side whose label sets are missing on the left. `vector(0)` has no labels, so it appears only when the left side is empty. Adding 0 to an empty result stays empty."
+    correct_option: b
+    explanation: "The operator `or` returns the left side and adds the series of the right side whose label sets are missing on the left. `vector(0)` has no labels, so it appears only when the left side is empty. Adding 0 to an empty result stays empty."
+
+  - id: ats049-final-050-q02
+    type: single_choice
+    difficulty: intermediate
+    learning_objective: "Predict the evaluation order from the precedence table, including the right-associative ^"
+    source_readings:
+      - sections/section-050/module-01/course-03-precedence-error-ratio-and-division.md
+    prompt: "What does `queue_depth * 2 > 40` return?"
+    options:
+      - id: a
+        text: "The series of `queue_depth` whose original value is above 40, with their original values."
+        explanation: "This option is not correct. Arithmetic binds tighter than a comparison. The multiplication runs first, and the comparison then filters on the doubled values and keeps them. The result has no metric name."
+      - id: b
+        text: "The value 1 or 0 for every series."
+        explanation: "This option is not correct. Arithmetic binds tighter than a comparison. The multiplication runs first, and the comparison then filters on the doubled values and keeps them. The result has no metric name."
+      - id: c
+        text: "The series whose doubled value is above 40, with the doubled values, because `*` runs before `>`."
+        explanation: "Correct. Arithmetic binds tighter than a comparison. The multiplication runs first, and the comparison then filters on the doubled values and keeps them. The result has no metric name."
+    correct_option: c
+    explanation: "Arithmetic binds tighter than a comparison. The multiplication runs first, and the comparison then filters on the doubled values and keeps them. The result has no metric name."
+
+  - id: ats049-final-060-q01
+    type: single_choice
+    difficulty: intermediate
+    learning_objective: "Write histogram_quantile(0.9, sum by (le) (rate(...[5m]))) and say why each part is needed"
+    source_readings:
+      - sections/section-060/module-01/course-02-rate-over-buckets-and-histogram-quantile.md
+    prompt: "What does `histogram_quantile(1.5, sum by (le) (rate(http_request_duration_seconds_bucket[5m])))` return?"
+    options:
+      - id: a
+        text: "The upper bound of the highest finite bucket."
+        explanation: "This happens when the rank lies in the `+Inf` bucket, for a valid quantile."
+      - id: b
+        text: "`+Inf`"
+        explanation: "Correct. A quantile argument above 1 is outside the valid range and returns `+Inf`."
+      - id: c
+        text: "An error from the query parser."
+        explanation: "The query is valid. The argument is only outside the range 0 to 1."
+    correct_option: b
+    explanation: "A quantile argument above 1 is outside the valid range and returns `+Inf`."
+
+  - id: ats049-final-060-q02
+    type: single_choice
+    difficulty: intermediate
+    learning_objective: "Compute the mean duration with rate(_sum) / rate(_count) per instance and for all instances together"
+    source_readings:
+      - sections/section-060/module-02/course-01-mean-duration-from-sum-and-count.md
+    prompt: "Instance A serves 300 requests per second with a mean of 0.2 seconds, and instance B serves 100 requests per second with a mean of 0.5 seconds. What is the mean of the service?"
+    options:
+      - id: a
+        text: "0.275 seconds"
+        explanation: "Correct. The summed duration is 300 times 0.2 plus 100 times 0.5, which is 110 seconds per second, divided by 400 requests per second."
+      - id: b
+        text: "0.35 seconds"
+        explanation: "This is the plain average of 0.2 and 0.5 and ignores the weights."
+      - id: c
+        text: "0.5 seconds"
+        explanation: "This is the slower instance only."
+    correct_option: a
+    explanation: "The summed duration is 300 times 0.2 plus 100 times 0.5, which is 110 seconds per second, divided by 400 requests per second."
+
+  - id: ats049-final-070-q01
+    type: single_choice
+    difficulty: beginner
+    learning_objective: "Predict when a series leaves the lookback window"
+    source_readings:
+      - sections/section-070/module-02/course-01-up-and-missing-series.md
+    prompt: "The last sample of `up{instance=\"probe-1:9100\"}` is at Unix time 1767228600. The lookback delta is the default 5 minutes. What does the instant query `up{instance=\"probe-1:9100\"}` return when it is evaluated at 1767228900?"
+    options:
+      - id: a
+        text: "The series with the value 1, because the sample is within 5 minutes."
+        explanation: "This option is not correct. The window is open at its left edge. A sample exactly 300 seconds old is excluded."
+      - id: b
+        text: "An empty result, because a sample exactly 5 minutes old is on the open left edge of the window."
+        explanation: "Correct. The lookback window is open at its left edge, so a sample exactly 300 seconds old no longer counts, and the series has no value."
+      - id: c
+        text: "The series with the value 0, because the target is down."
+        explanation: "This option is not correct. A missing sample never becomes the value 0."
+    correct_option: b
+    explanation: "The lookback window is open at its left edge, so a sample exactly 300 seconds old no longer counts, and the series has no value."
+
+  - id: ats049-final-070-q02
+    type: single_choice
+    difficulty: intermediate
+    learning_objective: "Explain how the age of an unrefreshed backup changes with the evaluation time"
+    source_readings:
+      - sections/section-070/module-01/course-02-age-of-an-event.md
+    prompt: "A backup job stopped updating `backup_last_success_timestamp_seconds` and its value stays constant. What happens to `time() - backup_last_success_timestamp_seconds` as the evaluation time moves 60 seconds later?"
+    options:
+      - id: a
+        text: "It stays constant, because the metric stays constant."
+        explanation: "This option is not correct. `time()` increases with the evaluation time, so the difference changes."
+      - id: b
+        text: "It resets to 0, because the evaluation time changed."
+        explanation: "This option is not correct. Only a new value of the metric resets the age."
+      - id: c
+        text: "It grows by 60, because `time()` grows by 60 and the metric does not change."
+        explanation: "Correct. `time()` is the evaluation time. With a constant metric value, the difference grows by the same number of seconds as the evaluation time."
+    correct_option: c
+    explanation: "`time()` is the evaluation time. With a constant metric value, the difference grows by the same number of seconds as the evaluation time."
+
+  - id: ats049-final-070-q03
+    type: single_choice
+    difficulty: intermediate
+    learning_objective: "Find series that vanished without naming them"
+    source_readings:
+      - sections/section-070/module-02/course-03-restarts-stale-series-and-gaps.md
+    prompt: "Which expression returns the `up` series that existed 10 minutes ago and do not exist now, without naming any instance?"
+    options:
+      - id: a
+        text: "`up offset 10m unless up`"
+        explanation: "Correct. `up offset 10m` is the old state, and `unless up` removes the series that still exist, so the vanished series remain."
+      - id: b
+        text: "`absent(up)`"
+        explanation: "This option is not correct. `absent()` returns nothing while any `up` series exists."
+      - id: c
+        text: "`up == 0`"
+        explanation: "This option is not correct. A vanished series has no value 0. It has no value at all."
+    correct_option: a
+    explanation: "`up offset 10m` is the old state, and `unless up` removes the series that still exist, so the vanished series remain."

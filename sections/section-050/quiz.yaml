@@ -1,0 +1,255 @@
+# Knowledge check for section 050. Listed in astrona.yaml as a `type: quiz` entry after the capstone lab.
+schema_version: 1
+kind: question_bank
+id: ats049-050
+course_id: ATS049
+exam_code: PCA
+status: draft
+provenance: Original practice material written for this course; not official exam questions.
+scope:
+  type: section
+  id: section-050
+  title: "Binary Operators"
+placement:
+  position: after
+  reading: sections/section-050/capstone/labs/lab-01/question.md
+questions:
+  - id: ats049-050-q01
+    type: single_choice
+    difficulty: beginner
+    learning_objective: "Say which labels survive an arithmetic operation and why the metric name disappears"
+    source_readings:
+      - sections/section-050/module-01/course-01-arithmetic-operators.md
+    prompt: "What does the result of `queue_depth * 2` contain?"
+    options:
+      - id: a
+        text: "One series for each series of `queue_depth`, with the same labels but without the metric name, and with every value doubled."
+        explanation: "Correct. An arithmetic operator keeps the labels of the vector and drops the metric name, because the result is a new value and no longer the queue depth. The scalar is applied to every sample."
+      - id: b
+        text: "One series for each series of `queue_depth`, with only the label `job`."
+        explanation: "This option is not correct. An arithmetic operator keeps the labels of the vector and drops the metric name, because the result is a new value and no longer the queue depth. The scalar is applied to every sample."
+      - id: c
+        text: "A single scalar, because the right operand is a scalar."
+        explanation: "This option is not correct. An arithmetic operator keeps the labels of the vector and drops the metric name, because the result is a new value and no longer the queue depth. The scalar is applied to every sample."
+    correct_option: a
+    explanation: "An arithmetic operator keeps the labels of the vector and drops the metric name, because the result is a new value and no longer the queue depth. The scalar is applied to every sample."
+
+  - id: ats049-050-q02
+    type: single_choice
+    difficulty: beginner
+    learning_objective: "Explain why a comparison between two scalars must use bool"
+    source_readings:
+      - sections/section-050/module-01/course-02-comparison-operators-and-bool.md
+    prompt: "What happens when you evaluate `3 > 2` without any modifier?"
+    options:
+      - id: a
+        text: "It returns the scalar 1."
+        explanation: "This option is not correct. A comparison between two scalars has no series to filter, so the `bool` modifier is required. The expression `3 > bool 2` returns 1."
+      - id: b
+        text: "Prometheus returns an error, and `3 > bool 2` returns 1."
+        explanation: "Correct. A comparison between two scalars has no series to filter, so the `bool` modifier is required. The expression `3 > bool 2` returns 1."
+      - id: c
+        text: "It returns an empty result."
+        explanation: "This option is not correct. A comparison between two scalars has no series to filter, so the `bool` modifier is required. The expression `3 > bool 2` returns 1."
+    correct_option: b
+    explanation: "A comparison between two scalars has no series to filter, so the `bool` modifier is required. The expression `3 > bool 2` returns 1."
+
+  - id: ats049-050-q03
+    type: single_choice
+    difficulty: beginner
+    learning_objective: "Use a comparison operator as a filter, and use the bool modifier to return 0 or 1 instead"
+    source_readings:
+      - sections/section-050/module-01/course-02-comparison-operators-and-bool.md
+    prompt: "You want one value for every series of `queue_depth`: 1 when the depth is above 26 and 0 when it is not. Which expression does this?"
+    options:
+      - id: a
+        text: "`queue_depth > bool 26`"
+        explanation: "Correct. Without `bool`, a comparison keeps only the series where it is true and keeps their values. With `bool`, every series stays and its value becomes 1 or 0. `bool(...)` is not a PromQL function."
+      - id: b
+        text: "`queue_depth and 26`"
+        explanation: "This option is not correct. Without `bool`, a comparison keeps only the series where it is true and keeps their values. With `bool`, every series stays and its value becomes 1 or 0. `bool(...)` is not a PromQL function."
+      - id: c
+        text: "`bool(queue_depth > 26)`"
+        explanation: "This option is not correct. Without `bool`, a comparison keeps only the series where it is true and keeps their values. With `bool`, every series stays and its value becomes 1 or 0. `bool(...)` is not a PromQL function."
+    correct_option: a
+    explanation: "Without `bool`, a comparison keeps only the series where it is true and keeps their values. With `bool`, every series stays and its value becomes 1 or 0. `bool(...)` is not a PromQL function."
+
+  - id: ats049-050-q04
+    type: single_choice
+    difficulty: intermediate
+    learning_objective: "Predict the evaluation order from the precedence table, including the right-associative ^"
+    source_readings:
+      - sections/section-050/module-01/course-03-precedence-error-ratio-and-division.md
+    prompt: "What does the scalar expression `2 ^ 3 ^ 2` return?"
+    options:
+      - id: a
+        text: "64, because the operators are evaluated from left to right."
+        explanation: "This option is not correct. Every binary operator is left associative except `^`. Prometheus evaluates `3 ^ 2` first, which is 9, and then `2 ^ 9`, which is 512."
+      - id: b
+        text: "36, because `^` binds weaker than the product."
+        explanation: "This option is not correct. Every binary operator is left associative except `^`. Prometheus evaluates `3 ^ 2` first, which is 9, and then `2 ^ 9`, which is 512."
+      - id: c
+        text: "512, because `^` is right associative and the expression is `2 ^ (3 ^ 2)`."
+        explanation: "Correct. Every binary operator is left associative except `^`. Prometheus evaluates `3 ^ 2` first, which is 9, and then `2 ^ 9`, which is 512."
+    correct_option: c
+    explanation: "Every binary operator is left associative except `^`. Prometheus evaluates `3 ^ 2` first, which is 9, and then `2 ^ 9`, which is 512."
+
+  - id: ats049-050-q05
+    type: single_choice
+    difficulty: intermediate
+    learning_objective: "Say what 1 / 0, -1 / 0 and 0 / 0 return"
+    source_readings:
+      - sections/section-050/module-01/course-03-precedence-error-ratio-and-division.md
+    prompt: "What does the expression `1 / 0` return in PromQL?"
+    options:
+      - id: a
+        text: "The value 0."
+        explanation: "This option is not correct. PromQL uses floating point numbers. A positive number divided by zero gives +Inf, a negative number gives -Inf and zero divided by zero gives NaN. None of these is an error."
+      - id: b
+        text: "The value +Inf, because division by zero follows IEEE 754 and does not raise an error."
+        explanation: "Correct. PromQL uses floating point numbers. A positive number divided by zero gives +Inf, a negative number gives -Inf and zero divided by zero gives NaN. None of these is an error."
+      - id: c
+        text: "An error with the type `execution`."
+        explanation: "This option is not correct. PromQL uses floating point numbers. A positive number divided by zero gives +Inf, a negative number gives -Inf and zero divided by zero gives NaN. None of these is an error."
+    correct_option: b
+    explanation: "PromQL uses floating point numbers. A positive number divided by zero gives +Inf, a negative number gives -Inf and zero divided by zero gives NaN. None of these is an error."
+
+  - id: ats049-050-q06
+    type: single_choice
+    difficulty: intermediate
+    learning_objective: "Write the error ratio and explain why both sides are aggregated first"
+    source_readings:
+      - sections/section-050/module-01/course-03-precedence-error-ratio-and-division.md
+    prompt: "The error ratio per job is `sum by (job) (rate(http_requests_total{status=\"500\"}[5m])) / sum by (job) (rate(http_requests_total[5m]))`. Why do both sides use the same `sum by (job)`?"
+    options:
+      - id: a
+        text: "It converts the counters into gauges so they can be divided."
+        explanation: "This option is not correct. Without the aggregation the two sides carry labels such as `status` and `method`, and a series with `status=\"500\"` has no partner with the same label set on the denominator side. After `sum by (job)` both sides have the same label set."
+      - id: b
+        text: "It removes the metric name, which is required for a division."
+        explanation: "This option is not correct. Without the aggregation the two sides carry labels such as `status` and `method`, and a series with `status=\"500\"` has no partner with the same label set on the denominator side. After `sum by (job)` both sides have the same label set."
+      - id: c
+        text: "It leaves each side with only the label `job`, so every numerator series pairs with exactly one denominator series."
+        explanation: "Correct. Without the aggregation the two sides carry labels such as `status` and `method`, and a series with `status=\"500\"` has no partner with the same label set on the denominator side. After `sum by (job)` both sides have the same label set."
+    correct_option: c
+    explanation: "Without the aggregation the two sides carry labels such as `status` and `method`, and a series with `status=\"500\"` has no partner with the same label set on the denominator side. After `sum by (job)` both sides have the same label set."
+
+  - id: ats049-050-q07
+    type: single_choice
+    difficulty: intermediate
+    learning_objective: "Use on(...) and ignoring(...) to choose the labels used for matching"
+    source_readings:
+      - sections/section-050/module-02/course-01-one-to-one-matching.md
+    prompt: "What does `http_requests_total{status=\"200\"} + http_requests_total{status=\"500\"}` return?"
+    options:
+      - id: a
+        text: "The sum for each instance and method, because the labels `instance` and `method` match."
+        explanation: "This option is not correct. One-to-one matching needs identical label sets apart from the metric name. The label `status` has a different value on the two sides, so nothing matches. Adding `ignoring(status)` removes that label from the comparison."
+      - id: b
+        text: "An empty result, because the label `status` differs on every pair, so no series has a partner with the identical label set."
+        explanation: "Correct. One-to-one matching needs identical label sets apart from the metric name. The label `status` has a different value on the two sides, so nothing matches. Adding `ignoring(status)` removes that label from the comparison."
+      - id: c
+        text: "An error, because the two metric names are the same."
+        explanation: "This option is not correct. One-to-one matching needs identical label sets apart from the metric name. The label `status` has a different value on the two sides, so nothing matches. Adding `ignoring(status)` removes that label from the comparison."
+    correct_option: b
+    explanation: "One-to-one matching needs identical label sets apart from the metric name. The label `status` has a different value on the two sides, so nothing matches. Adding `ignoring(status)` removes that label from the comparison."
+
+  - id: ats049-050-q08
+    type: single_choice
+    difficulty: intermediate
+    learning_objective: "Explain the error that Prometheus returns when one side of a match has more than one series"
+    source_readings:
+      - sections/section-050/module-02/course-01-one-to-one-matching.md
+    prompt: "The expression `http_requests_total / on(instance) build_info` fails with a matching error. Which change makes it valid and keeps all request series?"
+    options:
+      - id: a
+        text: "Add `group_left` after `on(instance)`, because several request series share one instance and `build_info` has one series for each instance."
+        explanation: "Correct. The left side has several series for the same `instance`, so the one-to-one match key is not unique. The left side is the many side, which is written with `group_left`."
+      - id: b
+        text: "Add `group_right` after `on(instance)`."
+        explanation: "This option is not correct. The left side has several series for the same `instance`, so the one-to-one match key is not unique. The left side is the many side, which is written with `group_left`."
+      - id: c
+        text: "Add `bool` after `/`."
+        explanation: "This option is not correct. The left side has several series for the same `instance`, so the one-to-one match key is not unique. The left side is the many side, which is written with `group_left`."
+    correct_option: a
+    explanation: "The left side has several series for the same `instance`, so the one-to-one match key is not unique. The left side is the many side, which is written with `group_left`."
+
+  - id: ats049-050-q09
+    type: single_choice
+    difficulty: intermediate
+    learning_objective: "Say which side of a many-to-one match is the many side and which labels the result carries"
+    source_readings:
+      - sections/section-050/module-02/course-02-group-left-and-group-right.md
+    prompt: "What does `queue_depth * on(instance) group_left(version) build_info` return for the instance `bridge-0:8080`, where `queue_depth` is 30 and `build_info` has the value 1?"
+    options:
+      - id: a
+        text: "An empty result, because `group_left` removes the labels of the left side."
+        explanation: "This option is not correct. The result keeps the labels of the many side, here the left side, and copies the listed label from the one side. The value is the product 30 * 1, which is 30."
+      - id: b
+        text: "A series with the value 30, the labels of `queue_depth` and the added label `version`."
+        explanation: "Correct. The result keeps the labels of the many side, here the left side, and copies the listed label from the one side. The value is the product 30 * 1, which is 30."
+      - id: c
+        text: "A series with the value 1 and only the label `version`."
+        explanation: "This option is not correct. The result keeps the labels of the many side, here the left side, and copies the listed label from the one side. The value is the product 30 * 1, which is 30."
+    correct_option: b
+    explanation: "The result keeps the labels of the many side, here the left side, and copies the listed label from the one side. The value is the product 30 * 1, which is 30."
+
+  - id: ats049-050-q10
+    type: single_choice
+    difficulty: intermediate
+    learning_objective: "Use group_left and group_right to match many series with one"
+    source_readings:
+      - sections/section-050/module-02/course-02-group-left-and-group-right.md
+    prompt: "You multiply `build_info`, which has one series per instance and is written on the left, by `queue_depth`, which has several series per instance on the right. Which modifier copies labels from the left side onto the result?"
+    options:
+      - id: a
+        text: "`group_both`"
+        explanation: "This option is not correct. The modifier names the side that has the many series. Here that side is the right one, so the modifier is `group_right`, and the labels in its list are copied from the left side."
+      - id: b
+        text: "No modifier, because `on(instance)` is enough."
+        explanation: "This option is not correct. The modifier names the side that has the many series. Here that side is the right one, so the modifier is `group_right`, and the labels in its list are copied from the left side."
+      - id: c
+        text: "`group_right`"
+        explanation: "Correct. The modifier names the side that has the many series. Here that side is the right one, so the modifier is `group_right`, and the labels in its list are copied from the left side."
+    correct_option: c
+    explanation: "The modifier names the side that has the many series. Here that side is the right one, so the modifier is `group_right`, and the labels in its list are copied from the left side."
+
+  - id: ats049-050-q11
+    type: single_choice
+    difficulty: intermediate
+    learning_objective: "Use and, or and unless to keep, add or remove series by their labels"
+    source_readings:
+      - sections/section-050/module-02/course-03-set-operators.md
+    prompt: "Which expression returns the series of `queue_depth` for the instances that are down, with the values of `queue_depth`?"
+    options:
+      - id: a
+        text: "`queue_depth and on(instance) up == 0`"
+        explanation: "Correct. The comparison binds tighter than `and`, so `up == 0` is evaluated first and leaves the series of the targets that are down. The operator `and` keeps the series on the left that have a partner and ignores the values on the right."
+      - id: b
+        text: "`queue_depth or on(instance) up == 0`"
+        explanation: "This option is not correct. The comparison binds tighter than `and`, so `up == 0` is evaluated first and leaves the series of the targets that are down. The operator `and` keeps the series on the left that have a partner and ignores the values on the right."
+      - id: c
+        text: "`queue_depth * on(instance) up == 0`"
+        explanation: "This option is not correct. The comparison binds tighter than `and`, so `up == 0` is evaluated first and leaves the series of the targets that are down. The operator `and` keeps the series on the left that have a partner and ignores the values on the right."
+    correct_option: a
+    explanation: "The comparison binds tighter than `and`, so `up == 0` is evaluated first and leaves the series of the targets that are down. The operator `and` keeps the series on the left that have a partner and ignores the values on the right."
+
+  - id: ats049-050-q12
+    type: single_choice
+    difficulty: intermediate
+    learning_objective: "Use and, or and unless to keep, add or remove series by their labels"
+    source_readings:
+      - sections/section-050/module-02/course-03-set-operators.md
+    prompt: "Which operator removes from the left side every series that has a partner on the right?"
+    options:
+      - id: a
+        text: "`group_left`"
+        explanation: "This option is not correct. The operator `unless` returns the series of the left side that have no partner on the right. The operator `and` keeps those that have one, and `or` adds the series that are missing from the left."
+      - id: b
+        text: "`and`"
+        explanation: "This option is not correct. The operator `unless` returns the series of the left side that have no partner on the right. The operator `and` keeps those that have one, and `or` adds the series that are missing from the left."
+      - id: c
+        text: "`unless`"
+        explanation: "Correct. The operator `unless` returns the series of the left side that have no partner on the right. The operator `and` keeps those that have one, and `or` adds the series that are missing from the left."
+    correct_option: c
+    explanation: "The operator `unless` returns the series of the left side that have no partner on the right. The operator `and` keeps those that have one, and `or` adds the series that are missing from the left."

@@ -1,37 +1,55 @@
----
-draft: true
-exam_objectives:
-- Selecting Data
----
-# Select One Population At An Evaluation Time
+# Task
 
-Evaluate the required expression and preserve its labels, values and evaluation time.
+The `bridge`, `shuttle` and `probe` targets of the `starfleet` fleet report to one Prometheus server, and the on-call team needs selectors that return exactly the series they name.
 
-## Starting state
-
-One instrumented probe serves metrics and structured request logs. A traffic generator makes ten percent of requests fail. Prometheus scrapes every two seconds; no evidence report or learner rule exists.
-
-Use a host shell with the private kubeconfig for this independent kind environment. A kubeconfig identifies the cluster and credentials used by kubectl, the Kubernetes command-line tool.
+The cluster has a Prometheus server in the namespace `starfleet` with one hour of generated data, from Unix time 1767225600 to 1767229200, and a `shuttle` pod with a query helper. Test an expression before you store it:
 
 ```sh
-export KUBECONFIG="$(astrona kubeconfig ats-049-lab-010-01-01)"
-test "$(kubectl config current-context)" = "kind-astro-ats-049-lab-010-01-01" || exit 1
-node_name="astro-ats-049-lab-010-01-01-control-plane"
-worker_name="astro-ats-049-lab-010-01-01-worker"
+kubectl -n starfleet exec deploy/shuttle -- python /tools/pq.py 'up'
 ```
 
-Keep this connection selected. Host-level commands name only this environment's node containers. They do not operate on the host operating system.
+The helper evaluates at Unix time 1767229200 by default. Add `--time UNIX` to evaluate at another time, and `--range START END STEP` for a range query. The helper prints one line per series, and a range vector prints the samples under the series line.
 
-## Required result
+Save your five expressions in a file named `answers.yaml`. Each value is one PromQL expression in single quotes:
 
-Filter the success population and preserve the evaluation time. Compare instant selection with a range selector without treating their result types as interchangeable.
+```yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: answers
+  namespace: starfleet
+data:
+  q1: ''
+  q2: ''
+  q3: ''
+  q4: ''
+  q5: ''
+```
 
-Use the expression `lab_requests_total{service="probe",status="200"}`. The report needs `expression`, `evaluated_at` and `data`. Data is the Prometheus API data object, not only the printed value. Wait for at least twenty seconds of collected traffic before using a rate. Record evidence within five minutes of submission. Changing the expression or claiming an empty result fails.
+Apply it, and apply the whole file again after every change:
 
-Record observations in `starfleet/evidence`, whose `report.json` contains the stated report. The verifier reads the live API again; invented values do not pass.
+```sh
+kubectl apply -f answers.yaml
+```
 
-The report object uses these fields: `expression`, `evaluated_at`, `data`. Keep numeric values numeric and preserve arrays and nested objects returned by the API.
+The grader reads each key, runs the expression against Prometheus and compares the series, the labels and the values with the expected result. A question can also require a technique, such as a modifier or an aggregation.
 
-## Verify The Result
+## Question 1 (key `q1`)
 
-The grader checks the required object fields and actual observations. Wait for controller convergence before submitting. Preserve the task's namespace, workload names and unrelated components.
+Select the `up` series of the jobs `bridge` and `shuttle`, and no other job, with one selector that uses a regular expression matcher. The grader checks it at the default evaluation time 1767229200.
+
+## Question 2 (key `q2`)
+
+Select the `http_requests_total` series that have the status `500`, for every instance except `shuttle-0:8080`. The grader checks it at the default evaluation time 1767229200.
+
+## Question 3 (key `q3`)
+
+Select every series whose metric name starts with `disk_`, without writing a metric name in front of the braces. The grader checks it at the default evaluation time 1767229200.
+
+## Question 4 (key `q4`)
+
+Return the number of `http_requests_total` series for each job, as one result element per job. The grader checks it at the default evaluation time 1767229200.
+
+## Question 5 (key `q5`)
+
+Return the samples of the last 30 seconds of the `http_requests_total` series of the job `shuttle` that have the status `200`, as a range vector. The grader checks it at the default evaluation time 1767229200.

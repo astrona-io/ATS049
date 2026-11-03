@@ -1,0 +1,65 @@
+# yaml-language-server: $schema=https://cli.astrona.io/schema/lab-config.schema.json
+#
+# Subqueries And Nested Time Aggregation (LAB). Graded against the live Prometheus server. UNTESTED: built
+# without a live run.
+apiVersion: astrona.io/v1
+metadata:
+  name: ats-049-lab-030-02
+  docs:
+    prerequisites: prerequisites.md
+    question: question.md
+    solution: solution.md
+
+runtime:
+  type: kind
+  kind:
+    image: kindest/node:v1.35.8
+    preloadImages:
+      - quay.io/prometheus/prometheus:v3.5.5
+      - docker.io/library/python:3.13-alpine
+
+bootstrap:
+  manifests:
+    - name: lab-start
+      type: file
+      source: manifests/lab-start.yaml
+  waitFor:
+    - resource: deploy/prometheus
+      namespace: starfleet
+    - resource: deploy/shuttle
+      namespace: starfleet
+
+# Applied only by `astrona test`: the reference solution (writes the answers).
+testing:
+  init:
+    - name: apply-solution
+      description: Write the reference answers
+      type: file
+      source: solution/apply.sh
+
+# One entry per validation script.
+validation:
+  scripts:
+    - name: peak-queue-total
+      description: "q1 returns the highest total queue depth of each job over 5 minutes"
+      type: file
+      source: validation/validate-peak-queue-total.sh
+      hint: "Sum first, then take the maximum: max_over_time over a subquery of sum by (job). Use the step 1m and evaluate at --time 1767227700."
+    - name: peak-request-rate
+      description: "q2 returns the highest one minute request rate of each job over 10 minutes"
+      type: file
+      source: validation/validate-peak-request-rate.sh
+      hint: "Apply rate() to each counter series first, then sum by (job), then wrap both in a subquery with a 10m range and a 1m step."
+    - name: fewest-targets-up
+      description: "q3 returns the lowest value of up for each job over 20 minutes"
+      type: file
+      source: validation/validate-fewest-targets-up.sh
+      hint: "Aggregate with min by (job) inside the subquery, and take min_over_time outside. The range is 20m."
+    - name: average-queue-total
+      description: "q4 returns the average total queue depth of each job over 30 minutes"
+      type: file
+      source: validation/validate-average-queue-total.sh
+      hint: "avg_over_time of a subquery over sum by (job) (queue_depth), with a 30m range and a 1m step."
+
+teardown:
+  keepCluster: false

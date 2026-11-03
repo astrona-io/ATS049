@@ -1,37 +1,23 @@
----
-draft: true
-exam_objectives:
-- Binary operators
----
-# Match Vectors Before Dividing
+# Question
 
-Evaluate the required expression and preserve its labels, values and evaluation time.
+Solve this question on: `terminal`
 
-## Starting state
+The `probe` instances report their disk usage and temperature. A review of the disks needs five PromQL expressions. Evaluate every expression at Unix time `1767228600`, the last moment at which both `probe-0` and `probe-1` have samples. The graders use this time.
 
-One instrumented probe serves metrics and structured request logs. A traffic generator makes ten percent of requests fail. Prometheus scrapes every two seconds; no evidence report or learner rule exists.
-
-Use a host shell with the private kubeconfig for this independent kind environment. A kubeconfig identifies the cluster and credentials used by kubectl, the Kubernetes command-line tool.
+Store each expression as text in the ConfigMap `answers` in the namespace `starfleet`, under the key named in the task. One way is to edit the ConfigMap with `kubectl -n starfleet edit configmap answers` and add the keys under `data:`. Test an expression first with the query helper, for example:
 
 ```sh
-export KUBECONFIG="$(astrona kubeconfig ats-049-lab-050-01-01)"
-test "$(kubectl config current-context)" = "kind-astro-ats-049-lab-050-01-01" || exit 1
-node_name="astro-ats-049-lab-050-01-01-control-plane"
-worker_name="astro-ats-049-lab-050-01-01-worker"
+kubectl -n starfleet exec deploy/shuttle -- python /tools/pq.py 'up' --time 1767228600
 ```
 
-Keep this connection selected. Host-level commands name only this environment's node containers. They do not operate on the host operating system.
+1. Key `q1`: the fraction of each disk that is used, that is `disk_used_bytes` divided by `disk_total_bytes`. The result must keep the labels `instance`, `job` and `mountpoint`.
 
-## Required result
+2. Key `q2`: the same fraction, but only for the disks that are more than 42 percent full. The result keeps the fraction as its value.
 
-Match the failure numerator with its population denominator. State what labels remain and why vector matching is required.
+3. Key `q3`: for every disk, the value 1 when it is more than 42 percent full and the value 0 when it is not. Both disks must be in the result.
 
-Use the expression `rate(lab_requests_total{status="500"}[20s]) / ignoring(status) group_left sum without(status) (rate(lab_requests_total[20s]))`. The report needs `expression`, `evaluated_at` and `data`. Data is the Prometheus API data object, not only the printed value. Wait for at least twenty seconds of collected traffic before using a rate. Record evidence within five minutes of submission. Changing the expression or claiming an empty result fails.
+4. Key `q4`: the CPU temperature of each `probe` in degrees Fahrenheit. The formula is Celsius times 9, divided by 5, plus 32. Use the metric `temperature_celsius`.
 
-Record observations in `starfleet/evidence`, whose `report.json` contains the stated report. The verifier reads the live API again; invented values do not pass.
+5. Key `q5`: the number of disks that are more than 42 percent full, as one series without labels. Count them with the `bool` modifier and `sum`.
 
-The report object uses these fields: `expression`, `evaluated_at`, `data`. Keep numeric values numeric and preserve arrays and nested objects returned by the API.
-
-## Verify The Result
-
-The grader checks the required object fields and actual observations. Wait for controller convergence before submitting. Preserve the task's namespace, workload names and unrelated components.
+`kubectl` already points at the cluster. The graders read the expressions from the ConfigMap, run them at the fixed time and compare the series, the labels and the values with the expected result.

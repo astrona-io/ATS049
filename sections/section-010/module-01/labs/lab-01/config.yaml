@@ -1,31 +1,70 @@
+# yaml-language-server: $schema=https://cli.astrona.io/schema/lab-config.schema.json
+#
+# Select Exact Populations (LAB). Graded against the live Prometheus server. UNTESTED: built
+# without a live run.
 apiVersion: astrona.io/v1
 metadata:
-  name: ats-049-lab-010-01-01
+  name: ats-049-lab-010-01
   docs:
-    prerequisites: docs/prerequisites.md
-    examQuestion: question.md
-    caseStudy: docs/case-study.md
-    guide: solution.md
+    prerequisites: prerequisites.md
+    question: question.md
+    solution: solution.md
+
 runtime:
   type: kind
   kind:
-    image: kindest/node:v1.35.0@sha256:452d707d4862f52530247495d180205e029056831160e22870e37e3f6c1ac31f
-    nodes:
-      workers: 1
+    image: kindest/node:v1.35.8
+    preloadImages:
+      - quay.io/prometheus/prometheus:v3.5.5
+      - docker.io/library/python:3.13-alpine
+
 bootstrap:
-  init:
-  - name: seed-private-environment
-    type: file
-    source: bootstrap/setup.sh
-teardown:
-  keepCluster: false
+  manifests:
+    - name: lab-start
+      type: file
+      source: manifests/lab-start.yaml
+  waitFor:
+    - resource: deploy/prometheus
+      namespace: starfleet
+    - resource: deploy/shuttle
+      namespace: starfleet
+
+# Applied only by `astrona test`: the reference solution (writes the answers).
 testing:
   init:
-  - name: reference-result
-    type: file
-    source: solution/apply.sh
+    - name: apply-solution
+      description: Write the reference answers
+      type: file
+      source: solution/apply.sh
+
+# One check per answer key.
 validation:
-  script:
-    name: verify-fields-and-live-evidence
-    type: file
-    source: validate.sh
+  scripts:
+    - name: answer-q1
+      description: "up series of the jobs bridge and shuttle"
+      type: file
+      source: validation/validate-q1.sh
+      hint: "Use the matcher =~ with an alternation of the two job names. The regular expression is fully anchored."
+    - name: answer-q2
+      description: "500 status request counters except shuttle-0"
+      type: file
+      source: validation/validate-q2.sh
+      hint: "Combine an equality matcher on status with a negated matcher on instance in one selector."
+    - name: answer-q3
+      description: "every series whose metric name starts with disk_"
+      type: file
+      source: validation/validate-q3.sh
+      hint: "Match the internal label __name__ with a regular expression that ends with .*"
+    - name: answer-q4
+      description: "number of http_requests_total series per job"
+      type: file
+      source: validation/validate-q4.sh
+      hint: "Use count by (job) around the selector."
+    - name: answer-q5
+      description: "last 30 seconds of the shuttle 200 counter"
+      type: file
+      source: validation/validate-q5.sh
+      hint: "Add a range selector with a duration of 30 seconds after the label matchers."
+
+teardown:
+  keepCluster: false

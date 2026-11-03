@@ -6,22 +6,57 @@ The [official objectives](https://training.linuxfoundation.org/certification/pro
 
 | Section | Official objective | Modules |
 | --- | --- | --- |
-| 010 | Selecting Data | 1 |
-| 020 | Rates and Derivatives | 1 |
-| 030 | Aggregating over time | 1 |
-| 040 | Aggregating over dimensions | 1 |
-| 050 | Binary operators | 1 |
-| 060 | Histograms | 1 |
-| 070 | Timestamp Metrics | 1 |
+| 010 | Selecting Data | 2 |
+| 020 | Rates and Derivatives | 2 |
+| 030 | Aggregating over time | 2 |
+| 040 | Aggregating over dimensions | 2 |
+| 050 | Binary operators | 2 |
+| 060 | Histograms | 2 |
+| 070 | Timestamp Metrics | 2 |
 
-| Section / module | Module | Teaching files |
+| Section | Module | Title |
 | --- | --- | --- |
-| 010 / 01 | Selecting PromQL Data And Evaluation Time | Selecting PromQL Data And Evaluation Time |
-| 020 / 01 | Counter Rates, Resets And Gauge Derivatives | Counter Rates, Resets And Gauge Derivatives |
-| 030 / 01 | Aggregating Samples Across Time Windows | Aggregating Samples Across Time Windows |
-| 040 / 01 | Aggregating Across Labels Without Losing Meaning | Aggregating Across Labels Without Losing Meaning |
-| 050 / 01 | Binary Operators And Vector Matching | Binary Operators And Vector Matching |
-| 060 / 01 | Histogram Buckets, Quantiles And Distribution Aggregation | Histogram Buckets, Quantiles And Distribution Aggregation |
-| 070 / 01 | Event Timestamps, Sample Freshness And Overdue Work | Event Timestamps, Sample Freshness And Overdue Work |
+| 010 | 1 | Selectors, Matchers And The Series Model |
+| 010 | 2 | Evaluation Time: Lookback, Staleness, Offset And @ |
+| 020 | 1 | Counters, rate And increase |
+| 020 | 2 | Gauges: delta, deriv And predict_linear |
+| 030 | 1 | The over_time Functions |
+| 030 | 2 | Subqueries And Nested Time Aggregation |
+| 040 | 1 | Aggregation Operators With by And without |
+| 040 | 2 | topk, bottomk, quantile, count_values And Statistics |
+| 050 | 1 | Arithmetic, Comparison And Precedence |
+| 050 | 2 | Vector Matching And Set Operators |
+| 060 | 1 | Classic Histograms And histogram_quantile |
+| 060 | 2 | Means, Fractions And Native Histograms |
+| 070 | 1 | time, timestamp And Age Of An Event |
+| 070 | 2 | Freshness, Absence And Gaps |
 
-AUTHORING.yaml records measurable goals and adaptation sources. Every objective retains its section ID. All technical readings remain draft. Question banks are separate from the reading manifest and follow their declared summaries. No labs, playgrounds or runtime validation are included.
+AUTHORING.yaml records measurable goals and adaptation sources. Every objective retains its section ID. All technical readings remain draft. Each section has a knowledge check and the course has a final domain knowledge check, listed in astrona.yaml as quiz items. Private playgrounds and independent labs are included. Live verification is recorded separately.
+
+## Hands-On Coverage
+
+This course has 14 ungraded playgrounds, 14 module labs and 7 capstone labs, each graded against a Prometheus server loaded with a fixed generated dataset. Every playground and lab was built without a live run: it passed `astrona validate -c`, `bash -n` and a YAML parse, and nothing was booted or tested. Each lab README is marked UNTESTED. Live execution remains pending.
+
+| Section | Level | Lab | Difficulty |
+| --- | --- | --- | --- |
+| 010 | module 1 | Select Exact Populations Lab | intermediate |
+| 010 | module 2 | Time-Shift Questions Lab | intermediate |
+| 010 | capstone | Selecting Data Capstone | advanced |
+| 020 | module 1 | Rates And Increases Lab | intermediate |
+| 020 | module 2 | Derivative Questions Lab | intermediate |
+| 020 | capstone | Rates and Derivatives Capstone | advanced |
+| 030 | module 1 | Window Questions Lab | intermediate |
+| 030 | module 2 | Subquery Questions Lab | intermediate |
+| 030 | capstone | Aggregating Over Time Capstone | advanced |
+| 040 | module 1 | Aggregation Operators With by And without Lab | intermediate |
+| 040 | module 2 | Ranking And Statistics Lab | intermediate |
+| 040 | capstone | Aggregating Over Dimensions Capstone | advanced |
+| 050 | module 1 | Arithmetic, Comparison And Precedence Lab | intermediate |
+| 050 | module 2 | Vector Matching And Set Operators Lab | intermediate |
+| 050 | capstone | Binary Operators Capstone | advanced |
+| 060 | module 1 | Classic Histograms And histogram_quantile Lab | intermediate |
+| 060 | module 2 | Means, Fractions And Native Histograms Lab | intermediate |
+| 060 | capstone | Histograms Capstone | advanced |
+| 070 | module 1 | Age And Uptime From Timestamps Lab | intermediate |
+| 070 | module 2 | Absence And Freshness Lab | intermediate |
+| 070 | capstone | Timestamp Metrics Capstone | advanced |

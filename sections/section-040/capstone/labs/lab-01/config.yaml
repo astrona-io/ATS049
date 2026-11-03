@@ -1,0 +1,70 @@
+# yaml-language-server: $schema=https://cli.astrona.io/schema/lab-config.schema.json
+#
+# Aggregating Over Dimensions Capstone (LAB). Graded against the live Prometheus server. UNTESTED: built
+# without a live run.
+apiVersion: astrona.io/v1
+metadata:
+  name: ats-049-capstone-040
+  docs:
+    prerequisites: prerequisites.md
+    question: question.md
+    solution: solution.md
+
+runtime:
+  type: kind
+  kind:
+    image: kindest/node:v1.35.8
+    preloadImages:
+      - quay.io/prometheus/prometheus:v3.5.5
+      - docker.io/library/python:3.13-alpine
+
+bootstrap:
+  manifests:
+    - name: lab-start
+      type: file
+      source: manifests/lab-start.yaml
+  waitFor:
+    - resource: deploy/prometheus
+      namespace: starfleet
+    - resource: deploy/shuttle
+      namespace: starfleet
+
+# Applied only by `astrona test`: the reference solution (writes the answers).
+testing:
+  init:
+    - name: apply-solution
+      description: Write the reference answers
+      type: file
+      source: solution/apply.sh
+
+# One check per question. Each script reads the answer from the ConfigMap `answers`.
+validation:
+  scripts:
+    - name: error-ratio-per-job
+      description: Weighted error ratio for each job
+      type: file
+      source: validation/validate-q1.sh
+      hint: Sum the error rate by job, sum the total rate by job, divide once. Both sides need the same by clause.
+    - name: worst-up-per-job
+      description: Lowest up value per job during the shuttle failure
+      type: file
+      source: validation/validate-q2.sh
+      hint: min shows a failing instance, avg would hide it.
+    - name: busiest-instance
+      description: Instance with the highest request rate
+      type: file
+      source: validation/validate-q3.sh
+      hint: Sum the rates by instance, then rank with topk.
+    - name: queue-spread-per-job
+      description: Standard deviation of queue_depth per job
+      type: file
+      source: validation/validate-q4.sh
+      hint: stddev is an aggregation operator and accepts by.
+    - name: cpus-per-instance
+      description: Number of CPU cores per instance
+      type: file
+      source: validation/validate-q5.sh
+      hint: Count by instance and cpu first, then count those series by instance. Evaluate at 1767228600.
+
+teardown:
+  keepCluster: false

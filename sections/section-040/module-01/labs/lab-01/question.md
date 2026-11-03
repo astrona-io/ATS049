@@ -1,37 +1,29 @@
----
-draft: true
-exam_objectives:
-- Aggregating over dimensions
----
-# Aggregate Across Status Labels
+# Question
 
-Evaluate the required expression and preserve its labels, values and evaluation time.
+Solve this question on: `terminal`
 
-## Starting state
+The starfleet operations team needs five numbers for a status board, and each number is one PromQL expression. Prometheus runs in the namespace `starfleet` with a fixed dataset: one hour of samples every 15 seconds, from Unix time `1767225600` to `1767229200`. Nothing is scraped. The default evaluation time of the helper is `1767229200`.
 
-One instrumented probe serves metrics and structured request logs. A traffic generator makes ten percent of requests fail. Prometheus scrapes every two seconds; no evidence report or learner rule exists.
+Write 5 PromQL expressions. Each answer is one expression, and the grader runs it at the time that the task names and compares the labels and the values of the result with the required result.
 
-Use a host shell with the private kubeconfig for this independent kind environment. A kubeconfig identifies the cluster and credentials used by kubectl, the Kubernetes command-line tool.
+1. **Answer `q1`.** Write an expression that returns the request rate in requests per second for each `job`, calculated over the last 5 minutes. The result must have the label `job` and no other label. Evaluate at the default time.
+2. **Answer `q2`.** Write an expression that returns the CPU time per second for each `instance` and each `mode`, summed over all cores, calculated over the last 5 minutes. The result must have the labels `instance` and `mode` only. Evaluate it at Unix time `1767228600`, which is when both probe targets have samples. Test it with `--time 1767228600`.
+3. **Answer `q3`.** Write an expression that returns how many series each metric name has for the job `bridge`. The result must have the label `__name__` and no other label. Evaluate at the default time.
+4. **Answer `q4`.** Write an expression that returns the number of targets that are down for each `job`. Jobs without a failed target must not appear in the result. Evaluate it at Unix time `1767228300`. Test it with `--time 1767228300`.
+5. **Answer `q5`.** Write an expression that returns the request rate over the last 5 minutes with the label `instance` removed and every other label kept. Use the clause that names the removed label. Evaluate at the default time.
+
+## How to test and store an answer
+
+Test an expression with the query helper that runs in the `shuttle` pod. Add `--time <unix seconds>` when the task gives another time:
 
 ```sh
-export KUBECONFIG="$(astrona kubeconfig ats-049-lab-040-01-01)"
-test "$(kubectl config current-context)" = "kind-astro-ats-049-lab-040-01-01" || exit 1
-node_name="astro-ats-049-lab-040-01-01-control-plane"
-worker_name="astro-ats-049-lab-040-01-01-worker"
+kubectl -n starfleet exec deploy/shuttle -- python /tools/pq.py 'up'
 ```
 
-Keep this connection selected. Host-level commands name only this environment's node containers. They do not operate on the host operating system.
+Store each answer as one key in the ConfigMap `answers` in the namespace `starfleet`. The key names are `q1`, `q2` and so on. Write all your answers so far in one command, because the command replaces the whole set of keys:
 
-## Required result
+```sh
+kubectl -n starfleet create configmap answers --from-literal=q1='sum(up)' --dry-run=client -o yaml | kubectl apply -f -
+```
 
-Remove only the status dimension and preserve compatible dimensions. This is an aggregate request rate, not a mean of percentages.
-
-Use the expression `sum without (status) (rate(lab_requests_total[20s]))`. The report needs `expression`, `evaluated_at` and `data`. Data is the Prometheus API data object, not only the printed value. Wait for at least twenty seconds of collected traffic before using a rate. Record evidence within five minutes of submission. Changing the expression or claiming an empty result fails.
-
-Record observations in `starfleet/evidence`, whose `report.json` contains the stated report. The verifier reads the live API again; invented values do not pass.
-
-The report object uses these fields: `expression`, `evaluated_at`, `data`. Keep numeric values numeric and preserve arrays and nested objects returned by the API.
-
-## Verify The Result
-
-The grader checks the required object fields and actual observations. Wait for controller convergence before submitting. Preserve the task's namespace, workload names and unrelated components.
+Add one more `--from-literal=qN='...'` argument for each further answer. Use double quotes inside an expression and single quotes around it. You can also change the keys with `kubectl -n starfleet edit configmap answers`.

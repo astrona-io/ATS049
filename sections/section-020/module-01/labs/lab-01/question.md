@@ -1,37 +1,43 @@
----
-draft: true
-exam_objectives:
-- Rates and Derivatives
----
-# Calculate Reset Aware Request Rates
+# Question
 
-Evaluate the required expression and preserve its labels, values and evaluation time.
+Solve this question on: `terminal`
 
-## Starting state
-
-One instrumented probe serves metrics and structured request logs. A traffic generator makes ten percent of requests fail. Prometheus scrapes every two seconds; no evidence report or learner rule exists.
-
-Use a host shell with the private kubeconfig for this independent kind environment. A kubeconfig identifies the cluster and credentials used by kubectl, the Kubernetes command-line tool.
+The `bridge` and `shuttle` services of the starship report request counters, and the crew needs five numbers from them. Write one PromQL expression for each task. Test each expression first with the query helper in the `shuttle` pod:
 
 ```sh
-export KUBECONFIG="$(astrona kubeconfig ats-049-lab-020-01-01)"
-test "$(kubectl config current-context)" = "kind-astro-ats-049-lab-020-01-01" || exit 1
-node_name="astro-ats-049-lab-020-01-01-control-plane"
-worker_name="astro-ats-049-lab-020-01-01-worker"
+kubectl -n starfleet exec deploy/shuttle -- python /tools/pq.py 'EXPR'
+kubectl -n starfleet exec deploy/shuttle -- python /tools/pq.py 'EXPR' --time 1767227550
 ```
 
-Keep this connection selected. Host-level commands name only this environment's node containers. They do not operate on the host operating system.
+The helper evaluates at Unix time 1767229200 unless you add `--time`. Use that default time for every task except task 3.
 
-## Required result
+The counter is `http_requests_total` with the labels `job`, `instance`, `method` and `status`. Prometheus has one hour of stored data and scrapes nothing.
 
-Apply rate to each counter series before aggregating. Explain why this avoids hiding an individual producer reset.
+1. Store in `q1` an expression for the request rate in requests per second over the last 5 minutes. Return one series per `instance` (with its `job`) by adding up the series with `sum without (method, status)`.
+2. Store in `q2` an expression for the number of responses with `status="500"` in the last 10 minutes, one series per `instance`.
+3. Store in `q3` an expression for the total request rate of all series of `job="bridge"` over a 5 minute range, evaluated at Unix time 1767227550. One instance of `bridge` restarted shortly before this time. The result must be a single value that is correct across the restart. Do not use a subquery.
+4. Store in `q4` an expression for the instant rate of POST requests (the rate from the last two samples, with a `1m` range) of `job="bridge"`, one series per `instance`.
+5. Store in `q5` an expression for the share of responses with `status="500"` in the total request rate over the last 5 minutes, one series per `job`.
 
-Use the expression `sum by (status) (rate(lab_requests_total[20s]))`. The report needs `expression`, `evaluated_at` and `data`. Data is the Prometheus API data object, not only the printed value. Wait for at least twenty seconds of collected traffic before using a rate. Record evidence within five minutes of submission. Changing the expression or claiming an empty result fails.
+Store the expressions in the ConfigMap `answers` in the namespace `starfleet`. The ConfigMap already exists and is empty. Save this as `configmap-answers.yaml` and replace each `...` with your expression:
 
-Record observations in `starfleet/evidence`, whose `report.json` contains the stated report. The verifier reads the live API again; invented values do not pass.
+```yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: answers
+  namespace: starfleet
+data:
+  q1: |-
+    ...
+  q2: |-
+    ...
+  q3: |-
+    ...
+  q4: |-
+    ...
+  q5: |-
+    ...
+```
 
-The report object uses these fields: `expression`, `evaluated_at`, `data`. Keep numeric values numeric and preserve arrays and nested objects returned by the API.
-
-## Verify The Result
-
-The grader checks the required object fields and actual observations. Wait for controller convergence before submitting. Preserve the task's namespace, workload names and unrelated components.
+Apply it with `kubectl apply -f configmap-answers.yaml`. You can also edit the ConfigMap with `kubectl -n starfleet edit configmap answers`. The grader runs each stored expression and a reference expression at the required time and compares the labels and the values of the results.

@@ -1,31 +1,71 @@
+# yaml-language-server: $schema=https://cli.astrona.io/schema/lab-config.schema.json
+#
+# Lab (LAB). Graded against the live Prometheus server. UNTESTED: built
+# without a live run.
 apiVersion: astrona.io/v1
 metadata:
-  name: ats-049-lab-070-01-01
+  name: ats-049-lab-070-01
   docs:
-    prerequisites: docs/prerequisites.md
-    examQuestion: question.md
-    caseStudy: docs/case-study.md
-    guide: solution.md
+    prerequisites: prerequisites.md
+    question: question.md
+    solution: solution.md
+
 runtime:
   type: kind
   kind:
-    image: kindest/node:v1.35.0@sha256:452d707d4862f52530247495d180205e029056831160e22870e37e3f6c1ac31f
-    nodes:
-      workers: 1
+    image: kindest/node:v1.35.8
+    preloadImages:
+      - quay.io/prometheus/prometheus:v3.5.5
+      - docker.io/library/python:3.13-alpine
+
 bootstrap:
-  init:
-  - name: seed-private-environment
-    type: file
-    source: bootstrap/setup.sh
-teardown:
-  keepCluster: false
+  manifests:
+    - name: lab-start
+      type: file
+      source: manifests/lab-start.yaml
+  waitFor:
+    - resource: deploy/prometheus
+      namespace: starfleet
+    - resource: deploy/shuttle
+      namespace: starfleet
+
+# Applied only by `astrona test`: the reference solution (writes the answers).
 testing:
   init:
-  - name: reference-result
-    type: file
-    source: solution/apply.sh
+    - name: apply-solution
+      description: Write the reference answers
+      type: file
+      source: solution/apply.sh
+
+# AUTHOR: replace `scripts: []` with one entry per validation/validate-*.sh file,
+# each with name, description, type: file, source and hint.
 validation:
-  script:
-    name: verify-fields-and-live-evidence
-    type: file
-    source: validate.sh
+  scripts:
+    - name: q1-uptime
+      description: q1 returns the uptime in seconds of every process
+      type: file
+      source: validation/validate-q1-uptime.sh
+      hint: Subtract process_start_time_seconds from time().
+    - name: q2-backup-age-minutes
+      description: q2 returns the minutes since the last backup of every source
+      type: file
+      source: validation/validate-q2-backup-age-minutes.sh
+      hint: Put the subtraction in parentheses, then divide by 60.
+    - name: q3-overdue-backups
+      description: q3 returns only backups older than 15 minutes, as an age in seconds
+      type: file
+      source: validation/validate-q3-overdue-backups.sh
+      hint: Compare the age in seconds with 900. Do not use bool.
+    - name: q4-sample-freshness
+      description: q4 returns the seconds since the newest up sample at time 1767229393
+      type: file
+      source: validation/validate-q4-sample-freshness.sh
+      hint: Use time() minus timestamp(up).
+    - name: q5-recent-restarts-hours
+      description: q5 returns the uptime in hours of processes younger than 2 hours
+      type: file
+      source: validation/validate-q5-recent-restarts-hours.sh
+      hint: Divide the uptime by 3600 and keep values below 2.
+
+teardown:
+  keepCluster: false

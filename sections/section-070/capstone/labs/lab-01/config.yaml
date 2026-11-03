@@ -1,0 +1,71 @@
+# yaml-language-server: $schema=https://cli.astrona.io/schema/lab-config.schema.json
+#
+# Capstone (LAB). Graded against the live Prometheus server. UNTESTED: built
+# without a live run.
+apiVersion: astrona.io/v1
+metadata:
+  name: ats-049-capstone-070
+  docs:
+    prerequisites: prerequisites.md
+    question: question.md
+    solution: solution.md
+
+runtime:
+  type: kind
+  kind:
+    image: kindest/node:v1.35.8
+    preloadImages:
+      - quay.io/prometheus/prometheus:v3.5.5
+      - docker.io/library/python:3.13-alpine
+
+bootstrap:
+  manifests:
+    - name: lab-start
+      type: file
+      source: manifests/lab-start.yaml
+  waitFor:
+    - resource: deploy/prometheus
+      namespace: starfleet
+    - resource: deploy/shuttle
+      namespace: starfleet
+
+# Applied only by `astrona test`: the reference solution (writes the answers).
+testing:
+  init:
+    - name: apply-solution
+      description: Write the reference answers
+      type: file
+      source: solution/apply.sh
+
+# AUTHOR: replace `scripts: []` with one entry per validation/validate-*.sh file,
+# each with name, description, type: file, source and hint.
+validation:
+  scripts:
+    - name: q1-backups-over-30-minutes
+      description: q1 returns the backup age in minutes for sources older than 30 minutes
+      type: file
+      source: validation/validate-q1-backups-over-30-minutes.sh
+      hint: Divide the age by 60 in parentheses and filter above 30.
+    - name: q2-backup-series-vanished
+      description: q2 returns the backup series that existed 10 minutes ago and are gone
+      type: file
+      source: validation/validate-q2-backup-series-vanished.sh
+      hint: Use the metric with offset 10m, then unless the metric.
+    - name: q3-probe-1-absent-10m
+      description: q3 returns 1 for probe-1 when it has no sample in 10 minutes
+      type: file
+      source: validation/validate-q3-probe-1-absent-10m.sh
+      hint: Use absent_over_time with a range of 10m and the instance matcher.
+    - name: q4-restarts-45m
+      description: q4 returns processes that restarted in the last 45 minutes
+      type: file
+      source: validation/validate-q4-restarts-45m.sh
+      hint: Use changes() on the start time over 45m and keep values above 0.
+    - name: q5-longest-uptime-days
+      description: q5 returns the longest uptime in days without labels
+      type: file
+      source: validation/validate-q5-longest-uptime-days.sh
+      hint: Take max of the uptime, then divide by 86400.
+
+teardown:
+  keepCluster: false

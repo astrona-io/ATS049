@@ -1,89 +1,57 @@
----
-draft: true
-exam_objectives:
-- Timestamp Metrics
----
-# Calculate Age From A Timestamp Metric Solution
+# Solution
 
-Use a host shell with the private kubeconfig for this independent kind environment. A kubeconfig identifies the cluster and credentials used by kubectl, the Kubernetes command-line tool.
+All five answers use the same idea: `time()` is the evaluation time, a timestamp-valued metric holds the time of an event, and the difference is an age in seconds. Test each expression with the helper before you store it.
 
-```sh
-export KUBECONFIG="$(astrona kubeconfig ats-049-lab-070-01-01)"
-test "$(kubectl config current-context)" = "kind-astro-ats-049-lab-070-01-01" || exit 1
-node_name="astro-ats-049-lab-070-01-01-control-plane"
-worker_name="astro-ats-049-lab-070-01-01-worker"
-```
+## Task 1: uptime in seconds
 
-Keep this connection selected. Host-level commands name only this environment's node containers. They do not operate on the host operating system.
-
-## Inspect And Explain
-
-One instrumented probe serves metrics and structured request logs. A traffic generator makes ten percent of requests fail. Prometheus scrapes every two seconds; no evidence report or learner rule exists.
-
-Inspect the current objects before changing them:
+Subtract the start time from `time()`:
 
 ```sh
-kubectl -n starfleet get pods -o wide
-kubectl get nodes -o wide
+kubectl -n starfleet exec deploy/shuttle -- python /tools/pq.py 'time() - process_start_time_seconds'
 ```
 
-Subtract a seconds timestamp from evaluation time. Distinguish the stored event timestamp from the sample timestamp and missing-series behavior.
+The result has one line for each of `bridge-0`, `bridge-1`, `probe-0` and `shuttle-0`, with the values 90000, 1800, 176400 and 4200. The series of `probe-1` has no sample inside the lookback window at this time, so it has no line. Store it in key `q1`.
 
-Use the expression `time() - lab_last_success_timestamp_seconds`. The report needs `expression`, `evaluated_at` and `data`. Data is the Prometheus API data object, not only the printed value. Wait for at least twenty seconds of collected traffic before using a rate. Record evidence within five minutes of submission. Changing the expression or claiming an empty result fails.
+## Task 2: minutes since the last backup
 
-Record observations in `starfleet/evidence`, whose `report.json` contains the stated report. The verifier reads the live API again; invented values do not pass.
-
-
-Save this as `record.py`:
-
-```python
-import json,subprocess,time,sys,tempfile,os
-
-def call(*args):
- r=subprocess.run(list(args),text=True,capture_output=True,timeout=20)
- assert r.returncode==0, 'Observation command failed: '+args[0]
- return r.stdout.strip()
-def obj(kind,name,ns='starfleet'):
- return json.loads(call('kubectl',*(['-n',ns] if ns else []),'get',kind,name,'-o','json'))
-def api(path):
- script='import urllib.request; print(urllib.request.urlopen('+repr('http://prometheus:9090'+path)+',timeout=8).read().decode())'
- return json.loads(call('kubectl','-n','starfleet','exec','shuttle','--','python','-c',script))
-def save(data):
- resource={'apiVersion':'v1','kind':'ConfigMap','metadata':{'name':'evidence','namespace':'starfleet'},'data':{'report.json':json.dumps(data,sort_keys=True)}}
- with tempfile.NamedTemporaryFile(mode='w',suffix='.json',delete=False) as f:json.dump(resource,f);path=f.name
- try:call('kubectl','apply','-f',path)
- finally:os.unlink(path)
-
-assert call('kubectl','config','current-context') == 'kind-astro-ats-049-lab-070-01-01'
-import urllib.parse
-stamp=time.time()
-expression='time() - lab_last_success_timestamp_seconds'
-answer=api('/api/v1/query?'+urllib.parse.urlencode({'query':expression,'time':stamp}))
-assert answer['status']=='success' and answer['data']['result'], 'Wait for enough scrapes'
-report={'expression':expression,'evaluated_at':stamp,'data':answer['data']}
-save(report)
-```
-
-Apply the scoped correction:
+Subtract, then divide by 60. The parentheses are required, because division binds tighter than subtraction:
 
 ```sh
-python3 record.py
+kubectl -n starfleet exec deploy/shuttle -- python /tools/pq.py '(time() - backup_last_success_timestamp_seconds) / 60'
 ```
 
-## Verify The Result
+You should see 40 for `probe-0` and 5 for `shuttle-0`. Store it in key `q2`.
 
-Observe the actual result. A denied request returns a nonzero status when the denial works, so run it separately from a shell sequence that stops on error. Status convergence and a successful request establish different parts of the result.
+## Task 3: backups older than 15 minutes
+
+Keep the age in seconds and filter with a comparison against 900:
 
 ```sh
-kubectl -n starfleet get configmaps
-kubectl -n starfleet get deployment probe -o yaml
+kubectl -n starfleet exec deploy/shuttle -- python /tools/pq.py 'time() - backup_last_success_timestamp_seconds > 900'
 ```
 
-Evaluate the required expression and preserve its labels, values and evaluation time. The commands above deliberately target one environment. Keep its remaining components available so an unrelated failure cannot stand in for the required denial or correction. No example command output is presented as evidence of a completed run. A matching field alone does not establish that a process used it or that a controller reconciled it.
+Only `probe-0` is returned, with the value 2400. Do not use `bool`, because that would return 1 or 0 instead of the age. Store it in key `q3`.
 
-After recording your result, remove the independent lab with `astrona destroy ats-049-lab-070-01-01`.
+## Task 4: freshness of the newest sample
 
-## Common pitfalls
+`timestamp(up)` returns the stored time of the newest sample, so the freshness is the difference to `time()`. Evaluate at 1767229393:
 
-> [!WARNING]
-> Confirm the private context and exact node names before a change. Check the stated scope and live result. Do not change unrelated components to hide the original fault.
+```sh
+kubectl -n starfleet exec deploy/shuttle -- python /tools/pq.py 'time() - timestamp(up)' --time 1767229393
+```
+
+The newest sample of every existing series is at 1767229200, so each of the four lines has the value 193. Store it in key `q4`. Do not put `--time` in the stored expression: the grader evaluates it at 1767229393 itself.
+
+## Task 5: uptime in hours below 2 hours
+
+Convert to hours with a division by 3600 and filter below 2:
+
+```sh
+kubectl -n starfleet exec deploy/shuttle -- python /tools/pq.py '(time() - process_start_time_seconds) / 3600 < 2'
+```
+
+Two lines remain: `bridge-1` with approximately 0.5 and `shuttle-0` with approximately 1.17 (4200 divided by 3600). Store it in key `q5`.
+
+## Store the answers
+
+Run the reference script or store your own expressions with `kubectl edit`. The graders read the keys `q1` to `q5` from the ConfigMap `answers`.

@@ -1,31 +1,69 @@
+# yaml-language-server: $schema=https://cli.astrona.io/schema/lab-config.schema.json
+#
+# Arithmetic, Comparison And Precedence (LAB). Graded against the live Prometheus server. UNTESTED: built
+# without a live run.
 apiVersion: astrona.io/v1
 metadata:
-  name: ats-049-lab-050-01-01
+  name: ats-049-lab-050-01
   docs:
-    prerequisites: docs/prerequisites.md
-    examQuestion: question.md
-    caseStudy: docs/case-study.md
-    guide: solution.md
+    prerequisites: prerequisites.md
+    question: question.md
+    solution: solution.md
+
 runtime:
   type: kind
   kind:
-    image: kindest/node:v1.35.0@sha256:452d707d4862f52530247495d180205e029056831160e22870e37e3f6c1ac31f
-    nodes:
-      workers: 1
+    image: kindest/node:v1.35.8
+    preloadImages:
+      - quay.io/prometheus/prometheus:v3.5.5
+      - docker.io/library/python:3.13-alpine
+
 bootstrap:
-  init:
-  - name: seed-private-environment
-    type: file
-    source: bootstrap/setup.sh
-teardown:
-  keepCluster: false
+  manifests:
+    - name: lab-start
+      type: file
+      source: manifests/lab-start.yaml
+  waitFor:
+    - resource: deploy/prometheus
+      namespace: starfleet
+    - resource: deploy/shuttle
+      namespace: starfleet
+
+# Applied only by `astrona test`: the reference solution (writes the answers).
 testing:
   init:
-  - name: reference-result
-    type: file
-    source: solution/apply.sh
+    - name: apply-solution
+      description: Write the reference answers
+      type: file
+      source: solution/apply.sh
+
 validation:
-  script:
-    name: verify-fields-and-live-evidence
-    type: file
-    source: validate.sh
+  scripts:
+    - name: q1-used-fraction
+      description: "q1: used fraction of each disk with all labels"
+      type: file
+      source: validation/validate-q1.sh
+      hint: "Divide disk_used_bytes by disk_total_bytes. The labels job, instance and mountpoint are identical on both sides, so no matching modifier is needed."
+    - name: q2-filter-above-threshold
+      description: "q2: only disks above 0.42"
+      type: file
+      source: validation/validate-q2.sh
+      hint: "Add the comparison > 0.42 after the division. Without bool the comparison filters."
+    - name: q3-bool-flags
+      description: "q3: 1 or 0 for every disk"
+      type: file
+      source: validation/validate-q3.sh
+      hint: "Write > bool 0.42 so that every disk stays in the result with a flag."
+    - name: q4-fahrenheit
+      description: "q4: temperature in Fahrenheit"
+      type: file
+      source: validation/validate-q4.sh
+      hint: "Multiplication and division run before addition, so temperature_celsius * 9 / 5 + 32 needs no parentheses."
+    - name: q5-count-above
+      description: "q5: number of disks above 0.42"
+      type: file
+      source: validation/validate-q5.sh
+      hint: "Put the bool comparison inside sum( ... ) to add the flags."
+
+teardown:
+  keepCluster: false

@@ -1,0 +1,70 @@
+# yaml-language-server: $schema=https://cli.astrona.io/schema/lab-config.schema.json
+#
+# Selecting Data Capstone (LAB). Graded against the live Prometheus server. UNTESTED: built
+# without a live run.
+apiVersion: astrona.io/v1
+metadata:
+  name: ats-049-capstone-010
+  docs:
+    prerequisites: prerequisites.md
+    question: question.md
+    solution: solution.md
+
+runtime:
+  type: kind
+  kind:
+    image: kindest/node:v1.35.8
+    preloadImages:
+      - quay.io/prometheus/prometheus:v3.5.5
+      - docker.io/library/python:3.13-alpine
+
+bootstrap:
+  manifests:
+    - name: lab-start
+      type: file
+      source: manifests/lab-start.yaml
+  waitFor:
+    - resource: deploy/prometheus
+      namespace: starfleet
+    - resource: deploy/shuttle
+      namespace: starfleet
+
+# Applied only by `astrona test`: the reference solution (writes the answers).
+testing:
+  init:
+    - name: apply-solution
+      description: Write the reference answers
+      type: file
+      source: solution/apply.sh
+
+# One check per answer key.
+validation:
+  scripts:
+    - name: answer-q1
+      description: "count of 5xx request series per instance"
+      type: file
+      source: validation/validate-q1.sh
+      hint: "Select by __name__ and by a status regular expression in one selector, then use count by (instance)."
+    - name: answer-q2
+      description: "probe up series ten minutes ago"
+      type: file
+      source: validation/validate-q2.sh
+      hint: "Put the offset directly after the selector."
+    - name: answer-q3
+      description: "five minutes of bridge-1 queue_depth ending at 1767227400"
+      type: file
+      source: validation/validate-q3.sh
+      hint: "A range selector takes the @ modifier after its brackets."
+    - name: answer-q4
+      description: "series count per job ten minutes after the evaluation time"
+      type: file
+      source: validation/validate-q4.sh
+      hint: "Use a negative offset inside count by (job)."
+    - name: answer-q5
+      description: "up and build_info of shuttle-0 at 1767228300"
+      type: file
+      source: validation/validate-q5.sh
+      hint: "Use a __name__ regular expression with an alternation and an equality matcher on instance."
+
+teardown:
+  keepCluster: false

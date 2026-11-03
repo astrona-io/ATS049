@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
+# Applies the reference solution. Run only by `astrona test`.
 set -euo pipefail
-if [[ "$(kubectl config current-context)" != "kind-astro-ats-049-lab-040-01-01" ]]; then
-  printf 'Refusing to operate on another Kubernetes context\n' >&2
-  exit 1
-fi
-lab_directory="$(cd "$(dirname "$0")/.." && pwd)"
-solution_directory="$lab_directory/solution"
-node_name="astro-ats-049-lab-040-01-01-control-plane"
-worker_name="astro-ats-049-lab-040-01-01-worker"
 
-python3 "$solution_directory/record.py"
+kubectl -n starfleet create configmap answers \
+  --from-literal=q1='sum by (job) (rate(http_requests_total[5m]))' \
+  --from-literal=q2='sum by (instance, mode) (rate(node_cpu_seconds_total[5m]))' \
+  --from-literal=q3='count by (__name__) ({job="bridge"})' \
+  --from-literal=q4='count by (job) (up == 0)' \
+  --from-literal=q5='sum without (instance) (rate(http_requests_total[5m]))' \
+  --dry-run=client -o yaml | kubectl apply -f -
+echo "[solution] Applied."

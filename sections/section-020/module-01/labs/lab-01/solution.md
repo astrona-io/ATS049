@@ -1,89 +1,100 @@
----
-draft: true
-exam_objectives:
-- Rates and Derivatives
----
-# Calculate Reset Aware Request Rates Solution
+# Solution
 
-Use a host shell with the private kubeconfig for this independent kind environment. A kubeconfig identifies the cluster and credentials used by kubectl, the Kubernetes command-line tool.
+Solve this lab on `terminal`. Each step ends with `astrona submit`. The `--keep` flag keeps the lab running so that you can continue after a failed check. The values below come from the dataset formulas, not from a recorded run: compare them with your own output.
+
+Start the lab if it is not running:
 
 ```sh
-export KUBECONFIG="$(astrona kubeconfig ats-049-lab-020-01-01)"
-test "$(kubectl config current-context)" = "kind-astro-ats-049-lab-020-01-01" || exit 1
-node_name="astro-ats-049-lab-020-01-01-control-plane"
-worker_name="astro-ats-049-lab-020-01-01-worker"
+astrona run --git ssh://git@github.com/astrona-io/ATS049.git -c sections/section-020/module-01/labs/lab-01
 ```
 
-Keep this connection selected. Host-level commands name only this environment's node containers. They do not operate on the host operating system.
+## Step 1: Request rate per instance
 
-## Inspect And Explain
-
-One instrumented probe serves metrics and structured request logs. A traffic generator makes ten percent of requests fail. Prometheus scrapes every two seconds; no evidence report or learner rule exists.
-
-Inspect the current objects before changing them:
+`rate()` goes first, on each series. `sum without (method, status)` then removes the two labels you do not want and keeps `instance` and `job`:
 
 ```sh
-kubectl -n starfleet get pods -o wide
-kubectl get nodes -o wide
+kubectl -n starfleet exec deploy/shuttle -- python /tools/pq.py 'sum without (method, status) (rate(http_requests_total[5m]))'
 ```
 
-Apply rate to each counter series before aggregating. Explain why this avoids hiding an individual producer reset.
+The three lines should be close to 12.6 for `bridge-0:8080`, 9.2 for `bridge-1:8080` and 5 for `shuttle-0:8080`. Those are the sums of the per-series rates 10 + 2 + 0.4 + 0.2, 8 + 1 + 0.2 + 0 and 4 + 1.
 
-Use the expression `sum by (status) (rate(lab_requests_total[20s]))`. The report needs `expression`, `evaluated_at` and `data`. Data is the Prometheus API data object, not only the printed value. Wait for at least twenty seconds of collected traffic before using a rate. Record evidence within five minutes of submission. Changing the expression or claiming an empty result fails.
+## Step 2: Errors in the last 10 minutes
 
-Record observations in `starfleet/evidence`, whose `report.json` contains the stated report. The verifier reads the live API again; invented values do not pass.
-
-
-Save this as `record.py`:
-
-```python
-import json,subprocess,time,sys,tempfile,os
-
-def call(*args):
- r=subprocess.run(list(args),text=True,capture_output=True,timeout=20)
- assert r.returncode==0, 'Observation command failed: '+args[0]
- return r.stdout.strip()
-def obj(kind,name,ns='starfleet'):
- return json.loads(call('kubectl',*(['-n',ns] if ns else []),'get',kind,name,'-o','json'))
-def api(path):
- script='import urllib.request; print(urllib.request.urlopen('+repr('http://prometheus:9090'+path)+',timeout=8).read().decode())'
- return json.loads(call('kubectl','-n','starfleet','exec','shuttle','--','python','-c',script))
-def save(data):
- resource={'apiVersion':'v1','kind':'ConfigMap','metadata':{'name':'evidence','namespace':'starfleet'},'data':{'report.json':json.dumps(data,sort_keys=True)}}
- with tempfile.NamedTemporaryFile(mode='w',suffix='.json',delete=False) as f:json.dump(resource,f);path=f.name
- try:call('kubectl','apply','-f',path)
- finally:os.unlink(path)
-
-assert call('kubectl','config','current-context') == 'kind-astro-ats-049-lab-020-01-01'
-import urllib.parse
-stamp=time.time()
-expression='sum by (status) (rate(lab_requests_total[20s]))'
-answer=api('/api/v1/query?'+urllib.parse.urlencode({'query':expression,'time':stamp}))
-assert answer['status']=='success' and answer['data']['result'], 'Wait for enough scrapes'
-report={'expression':expression,'evaluated_at':stamp,'data':answer['data']}
-save(report)
-```
-
-Apply the scoped correction:
+`increase()` returns a count. Select the 500 series, use a `10m` range, and add the series up per instance:
 
 ```sh
-python3 record.py
+kubectl -n starfleet exec deploy/shuttle -- python /tools/pq.py 'sum by (instance) (increase(http_requests_total{status="500"}[10m]))'
 ```
 
-## Verify The Result
+The values should be close to 360 for `bridge-0:8080` (0.4 and 0.2 per second for 600 seconds), 120 for `bridge-1:8080` and 600 for `shuttle-0:8080`.
 
-Observe the actual result. A denied request returns a nonzero status when the denial works, so run it separately from a shell sequence that stops on error. Status convergence and a successful request establish different parts of the result.
+## Step 3: The rate across the restart
+
+The restart of `bridge-1:8080` is at Unix time 1767227400, so a 5 minute range that ends at 1767227550 holds it. Take `rate()` of every series, then sum:
 
 ```sh
-kubectl -n starfleet get configmaps
-kubectl -n starfleet get deployment probe -o yaml
+kubectl -n starfleet exec deploy/shuttle -- python /tools/pq.py 'sum(rate(http_requests_total{job="bridge"}[5m]))' --time 1767227550
 ```
 
-Evaluate the required expression and preserve its labels, values and evaluation time. The commands above deliberately target one environment. Keep its remaining components available so an unrelated failure cannot stand in for the required denial or correction. No example command output is presented as evidence of a completed run. A matching field alone does not establish that a process used it or that a controller reconciled it.
+The value should be close to 21.3. It is a little below the steady value of 21.8, because each reset loses one step of growth. A subquery such as `rate(sum(...)[5m:15s])` gives about 523 and is wrong.
 
-After recording your result, remove the independent lab with `astrona destroy ats-049-lab-020-01-01`.
+## Step 4: Instant rate of POST requests
 
-## Common pitfalls
+`irate()` uses the last two samples. `bridge-0:8080` has POST 200 at 2 per second and POST 500 at 0.2 per second, `bridge-1:8080` has 1 and 0:
 
-> [!WARNING]
-> Confirm the private context and exact node names before a change. Check the stated scope and live result. Do not change unrelated components to hide the original fault.
+```sh
+kubectl -n starfleet exec deploy/shuttle -- python /tools/pq.py 'sum by (instance) (irate(http_requests_total{job="bridge",method="POST"}[1m]))'
+```
+
+The values should be close to 2.2 and 1.
+
+## Step 5: Error share per job
+
+Divide two aggregated rates. Both sides keep only `job`, so the labels match:
+
+```sh
+kubectl -n starfleet exec deploy/shuttle -- python /tools/pq.py 'sum by (job) (rate(http_requests_total{status="500"}[5m])) / sum by (job) (rate(http_requests_total[5m]))'
+```
+
+The values should be close to 0.0367 for `bridge` (0.8 divided by 21.8) and 0.2 for `shuttle` (1 divided by 5).
+
+## Store the answers and grade them
+
+Save this as `configmap-answers.yaml`:
+
+```yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: answers
+  namespace: starfleet
+data:
+  q1: |-
+    sum without (method, status) (rate(http_requests_total[5m]))
+  q2: |-
+    sum by (instance) (increase(http_requests_total{status="500"}[10m]))
+  q3: |-
+    sum(rate(http_requests_total{job="bridge"}[5m]))
+  q4: |-
+    sum by (instance) (irate(http_requests_total{job="bridge",method="POST"}[1m]))
+  q5: |-
+    sum by (job) (rate(http_requests_total{status="500"}[5m])) / sum by (job) (rate(http_requests_total[5m]))
+```
+
+Apply it:
+
+```sh
+kubectl apply -f configmap-answers.yaml
+```
+
+Grade it:
+
+```sh
+astrona submit --git ssh://git@github.com/astrona-io/ATS049.git -c sections/section-020/module-01/labs/lab-01
+```
+
+All five checks should pass. Then remove the lab:
+
+```sh
+astrona destroy ats-049-lab-020-01
+```

@@ -1,0 +1,255 @@
+# Knowledge check for section 010. Listed in astrona.yaml as a `type: quiz` entry after the capstone lab.
+schema_version: 1
+kind: question_bank
+id: ats049-010
+course_id: ATS049
+exam_code: PCA
+status: draft
+provenance: Original practice material written for this course; not official exam questions.
+scope:
+  type: section
+  id: section-010
+  title: "Selecting Data"
+placement:
+  position: after
+  reading: sections/section-010/capstone/labs/lab-01/question.md
+questions:
+  - id: ats049-010-q01
+    type: single_choice
+    difficulty: beginner
+    learning_objective: "Explain what a time series is and which parts of it identify it"
+    source_readings:
+      - sections/section-010/module-01/course-01-series-metric-names-and-labels.md
+    prompt: "Two series have the metric name `queue_depth`, and one has the labels `instance=\"bridge-0:8080\"` and the other has `instance=\"bridge-1:8080\"`. How does Prometheus treat them?"
+    options:
+      - id: a
+        text: "As one series, because the metric name is the same."
+        explanation: "This option is not correct. A series is identified by its metric name together with its complete label set. A different value of any label creates a different series."
+      - id: b
+        text: "As two different series, because the metric name and the full label set identify a series."
+        explanation: "Correct. A series is identified by its metric name together with its complete label set. A different value of any label creates a different series."
+      - id: c
+        text: "As one series with two values, because `instance` is not part of the identity."
+        explanation: "This option is not correct. A series is identified by its metric name together with its complete label set. A different value of any label creates a different series."
+    correct_option: b
+    explanation: "A series is identified by its metric name together with its complete label set. A different value of any label creates a different series."
+
+  - id: ats049-010-q02
+    type: single_choice
+    difficulty: beginner
+    learning_objective: "Count the series a selector returns with count and count by, and use the count to check a selection"
+    source_readings:
+      - sections/section-010/module-01/course-01-series-metric-names-and-labels.md
+    prompt: "The query `count(up)` returns `{} 4`. What does the value 4 mean?"
+    options:
+      - id: a
+        text: "The sum of the `up` values is 4, so four targets are down."
+        explanation: "This option is not correct. `count` returns the number of elements of the instant vector, which is the number of series with a recent sample. It does not add values and does not count samples."
+      - id: b
+        text: "Four samples were collected in the last five minutes."
+        explanation: "This option is not correct. `count` returns the number of elements of the instant vector, which is the number of series with a recent sample. It does not add values and does not count samples."
+      - id: c
+        text: "Four series have a sample in the lookback window at the evaluation time."
+        explanation: "Correct. `count` returns the number of elements of the instant vector, which is the number of series with a recent sample. It does not add values and does not count samples."
+    correct_option: c
+    explanation: "`count` returns the number of elements of the instant vector, which is the number of series with a recent sample. It does not add values and does not count samples."
+
+  - id: ats049-010-q03
+    type: single_choice
+    difficulty: intermediate
+    learning_objective: "Explain that a regular expression matcher is fully anchored"
+    source_readings:
+      - sections/section-010/module-01/course-02-the-four-label-matchers.md
+    prompt: "Which result does `up{job=~\"bri\"}` give when a job named `bridge` exists?"
+    options:
+      - id: a
+        text: "An empty result, because the pattern must match the whole value and no job is named `bri`."
+        explanation: "Correct. Regular expression matchers are fully anchored, so `bri` is treated as `^bri$`. The pattern `bri.*` would select `bridge`."
+      - id: b
+        text: "The series of the job `bridge`, because the pattern matches part of the value."
+        explanation: "This option is not correct. Regular expression matchers are fully anchored, so `bri` is treated as `^bri$`. The pattern `bri.*` would select `bridge`."
+      - id: c
+        text: "An error, because a regular expression needs `.*` to be valid."
+        explanation: "This option is not correct. Regular expression matchers are fully anchored, so `bri` is treated as `^bri$`. The pattern `bri.*` would select `bridge`."
+    correct_option: a
+    explanation: "Regular expression matchers are fully anchored, so `bri` is treated as `^bri$`. The pattern `bri.*` would select `bridge`."
+
+  - id: ats049-010-q04
+    type: single_choice
+    difficulty: intermediate
+    learning_objective: "Explain that a matcher for an empty value also selects series that do not have the label"
+    source_readings:
+      - sections/section-010/module-01/course-02-the-four-label-matchers.md
+    prompt: "The metric `up` has no label `sensor`. What does `up{sensor=\"\"}` return?"
+    options:
+      - id: a
+        text: "An empty result, because no series has the value `\"\"`."
+        explanation: "This option is not correct. A series without a label is treated as if the label were empty, so the equality with the empty string is true for every series of `up`."
+      - id: b
+        text: "An error, because an empty string is not allowed in a matcher."
+        explanation: "This option is not correct. A series without a label is treated as if the label were empty, so the equality with the empty string is true for every series of `up`."
+      - id: c
+        text: "All series of `up` that have a recent sample, because a missing label counts as an empty value."
+        explanation: "Correct. A series without a label is treated as if the label were empty, so the equality with the empty string is true for every series of `up`."
+    correct_option: c
+    explanation: "A series without a label is treated as if the label were empty, so the equality with the empty string is true for every series of `up`."
+
+  - id: ats049-010-q05
+    type: single_choice
+    difficulty: intermediate
+    learning_objective: "Explain why a selector needs at least one matcher that cannot match the empty string"
+    source_readings:
+      - sections/section-010/module-01/course-02-the-four-label-matchers.md
+    prompt: "Which selector does Prometheus accept?"
+    options:
+      - id: a
+        text: "`{job=~\".+\"}`"
+        explanation: "Correct. A selector without a metric name needs at least one matcher that cannot match an empty value. `.+` needs one character. The patterns in the other two options also match an empty value, so the server rejects them."
+      - id: b
+        text: "`{job=~\".*\"}`"
+        explanation: "This option is not correct. A selector without a metric name needs at least one matcher that cannot match an empty value. `.+` needs one character. The patterns in the other two options also match an empty value, so the server rejects them."
+      - id: c
+        text: "`{job!=\"probe\"}`"
+        explanation: "This option is not correct. A selector without a metric name needs at least one matcher that cannot match an empty value. `.+` needs one character. The patterns in the other two options also match an empty value, so the server rejects them."
+    correct_option: a
+    explanation: "A selector without a metric name needs at least one matcher that cannot match an empty value. `.+` needs one character. The patterns in the other two options also match an empty value, so the server rejects them."
+
+  - id: ats049-010-q06
+    type: single_choice
+    difficulty: intermediate
+    learning_objective: "Name the four PromQL types and write a range selector with a valid duration"
+    source_readings:
+      - sections/section-010/module-01/course-03-expression-types-ranges-and-counting.md
+    prompt: "A counter has samples every 15 seconds and the newest sample is at the evaluation time. How many samples does the selector with `[1m]` return in Prometheus 3?"
+    options:
+      - id: a
+        text: "Five, because the sample exactly one minute earlier is included."
+        explanation: "This option is not correct. The range covers the times greater than the evaluation time minus 60 seconds, up to and including the evaluation time. The sample at exactly 60 seconds earlier is excluded."
+      - id: b
+        text: "Four, because a range selector is left-open and right-closed."
+        explanation: "Correct. The range covers the times greater than the evaluation time minus 60 seconds, up to and including the evaluation time. The sample at exactly 60 seconds earlier is excluded."
+      - id: c
+        text: "Six, because one sample is added at each boundary."
+        explanation: "This option is not correct. The range covers the times greater than the evaluation time minus 60 seconds, up to and including the evaluation time. The sample at exactly 60 seconds earlier is excluded."
+    correct_option: b
+    explanation: "The range covers the times greater than the evaluation time minus 60 seconds, up to and including the evaluation time. The sample at exactly 60 seconds earlier is excluded."
+
+  - id: ats049-010-q07
+    type: single_choice
+    difficulty: beginner
+    learning_objective: "Write a range selector with a valid duration"
+    source_readings:
+      - sections/section-010/module-01/course-03-expression-types-ranges-and-counting.md
+    prompt: "Which duration is valid in a range selector?"
+    options:
+      - id: a
+        text: "`1h30m`"
+        explanation: "Correct. Units are written from the largest to the smallest and each unit appears only once. `1h30m` is 5400 seconds."
+      - id: b
+        text: "`30m1h`"
+        explanation: "This option is not correct. Units are written from the largest to the smallest and each unit appears only once. `1h30m` is 5400 seconds."
+      - id: c
+        text: "`1m1m`"
+        explanation: "This option is not correct. Units are written from the largest to the smallest and each unit appears only once. `1h30m` is 5400 seconds."
+    correct_option: a
+    explanation: "Units are written from the largest to the smallest and each unit appears only once. `1h30m` is 5400 seconds."
+
+  - id: ats049-010-q08
+    type: single_choice
+    difficulty: intermediate
+    learning_objective: "Count the series a selector returns with count and count by, and use the count to check a selection"
+    source_readings:
+      - sections/section-010/module-01/course-03-expression-types-ranges-and-counting.md
+    prompt: "What does `count(up{job=\"nothing\"})` return when no series has that job?"
+    options:
+      - id: a
+        text: "`{} 0`"
+        explanation: "This option is not correct. An aggregation of an empty vector is an empty vector. `count` does not return 0 in this case."
+      - id: b
+        text: "An error that says that the selector matched nothing"
+        explanation: "This option is not correct. An aggregation of an empty vector is an empty vector. `count` does not return 0 in this case."
+      - id: c
+        text: "An empty result"
+        explanation: "Correct. An aggregation of an empty vector is an empty vector. `count` does not return 0 in this case."
+    correct_option: c
+    explanation: "An aggregation of an empty vector is an empty vector. `count` does not return 0 in this case."
+
+  - id: ats049-010-q09
+    type: single_choice
+    difficulty: beginner
+    learning_objective: "State how an instant vector selector chooses a sample"
+    source_readings:
+      - sections/section-010/module-02/course-01-lookback-delta-and-staleness.md
+    prompt: "An instant vector selector is evaluated at time t with the default lookback delta. Which samples can it return for a series?"
+    options:
+      - id: a
+        text: "Samples with a timestamp from t minus 5 minutes up to and including t"
+        explanation: "This option is not correct. The window is left-open and right-closed: the newest sample in `(t - 5m, t]` is used. A sample exactly five minutes old is not used."
+      - id: b
+        text: "Samples with a timestamp greater than t minus 5 minutes, up to and including t"
+        explanation: "Correct. The window is left-open and right-closed: the newest sample in `(t - 5m, t]` is used. A sample exactly five minutes old is not used."
+      - id: c
+        text: "Samples with a timestamp after t, up to t plus 5 minutes"
+        explanation: "This option is not correct. The window is left-open and right-closed: the newest sample in `(t - 5m, t]` is used. A sample exactly five minutes old is not used."
+    correct_option: b
+    explanation: "The window is left-open and right-closed: the newest sample in `(t - 5m, t]` is used. A sample exactly five minutes old is not used."
+
+  - id: ats049-010-q10
+    type: single_choice
+    difficulty: advanced
+    learning_objective: "Explain staleness and why a series with no recent samples is absent from a result"
+    source_readings:
+      - sections/section-010/module-02/course-01-lookback-delta-and-staleness.md
+    prompt: "The last sample of `up{instance=\"probe-1:9100\"}` is at Unix time 1767228600, and no stale marker exists. Which of these evaluation times is the earliest at which the selector returns an empty result?"
+    options:
+      - id: a
+        text: "1767228885"
+        explanation: "This option is not correct. At 1767228885 the window `(1767228585, 1767228885]` holds the sample. At 1767228900 the window is `(1767228600, 1767228900]`, and the sample on the open edge is excluded. 1767228915 is also empty, but it is not the earliest."
+      - id: b
+        text: "1767228915"
+        explanation: "This option is not correct. At 1767228885 the window `(1767228585, 1767228885]` holds the sample. At 1767228900 the window is `(1767228600, 1767228900]`, and the sample on the open edge is excluded. 1767228915 is also empty, but it is not the earliest."
+      - id: c
+        text: "1767228900"
+        explanation: "Correct. At 1767228885 the window `(1767228585, 1767228885]` holds the sample. At 1767228900 the window is `(1767228600, 1767228900]`, and the sample on the open edge is excluded. 1767228915 is also empty, but it is not the earliest."
+    correct_option: c
+    explanation: "At 1767228885 the window `(1767228585, 1767228885]` holds the sample. At 1767228900 the window is `(1767228600, 1767228900]`, and the sample on the open edge is excluded. 1767228915 is also empty, but it is not the earliest."
+
+  - id: ats049-010-q11
+    type: single_choice
+    difficulty: advanced
+    learning_objective: "Predict the result when @ and offset are combined on one selector"
+    source_readings:
+      - sections/section-010/module-02/course-02-offset-and-the-at-modifier.md
+    prompt: "Which time does `queue_depth @ 1767227385 offset 5m` read, when the evaluation time is 1767229200?"
+    options:
+      - id: a
+        text: "1767227385, because the offset is ignored when `@` is present"
+        explanation: "This option is not correct. The offset is relative to the `@` time, so the selector reads the data at 1767227385 minus 300 seconds, which is 1767227085."
+      - id: b
+        text: "1767227085, because the offset counts from the `@` time"
+        explanation: "Correct. The offset is relative to the `@` time, so the selector reads the data at 1767227385 minus 300 seconds, which is 1767227085."
+      - id: c
+        text: "1767228900, because the offset counts from the evaluation time"
+        explanation: "This option is not correct. The offset is relative to the `@` time, so the selector reads the data at 1767227385 minus 300 seconds, which is 1767227085."
+    correct_option: b
+    explanation: "The offset is relative to the `@` time, so the selector reads the data at 1767227385 minus 300 seconds, which is 1767227085."
+
+  - id: ats049-010-q12
+    type: single_choice
+    difficulty: advanced
+    learning_objective: "Explain how a range query evaluates an expression at each step"
+    source_readings:
+      - sections/section-010/module-02/course-03-range-queries-step-and-window.md
+    prompt: "A range query with a step of 1200 seconds over `up{job=\"shuttle\"}` shows only the value 1, although the target failed for ten minutes between two steps. What explains this?"
+    options:
+      - id: a
+        text: "A range query evaluates only at the step times, so an event between two evaluations is not visible."
+        explanation: "Correct. Each step is an independent instant evaluation. An event that starts and ends between two step times is never seen. A shorter step shows it."
+      - id: b
+        text: "The lookback delta removes the value 0 from range queries."
+        explanation: "This option is not correct. Each step is an independent instant evaluation. An event that starts and ends between two step times is never seen. A shorter step shows it."
+      - id: c
+        text: "The window of the selector is too short to include the value 0."
+        explanation: "This option is not correct. Each step is an independent instant evaluation. An event that starts and ends between two step times is never seen. A shorter step shows it."
+    correct_option: a
+    explanation: "Each step is an independent instant evaluation. An event that starts and ends between two step times is never seen. A shorter step shows it."

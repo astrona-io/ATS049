@@ -1,8 +1,10 @@
+---
 training:
   id: ATS049
   title: 'PCA: PromQL'
   description: 'Detailed reading material and reusable YAML knowledge checks for PCA:
-    PromQL. Technical content remains draft. Private playgrounds and draft independent labs are included.'
+    PromQL. Technical content remains draft. Private playgrounds and draft independent
+    labs are included.'
   certification:
     name: Prometheus Certified Associate
     code: PCA
@@ -36,312 +38,893 @@ modules:
     path: sections/intro/course-03-how-this-course-is-made.md
 - id: module-010
   title: Selecting Data
-  description: Developed reading and reasoning for Selecting Data.
-  maturity: alpha
+  description: 'Makes the reader able to select exactly the series a PromQL expression
+    means: the series model, the four label matchers, expression types, range selectors
+    and counting, and then the time rules that decide which sample a selector returns:
+    lookback delta, staleness, offset, the @ modifier and range queries.
+
+'
+  status: alpha
   content:
   - type: reading
-    title: Selecting Data
+    title: Section Overview
     path: sections/section-010/README.md
   - type: reading
-    title: Selecting PromQL Data And Evaluation Time
+    title: Selectors, Matchers And The Series Model
     path: sections/section-010/module-01/course.md
   - type: reading
-    title: Selecting PromQL Data And Evaluation Time
-    path: sections/section-010/module-01/course-01-selecting-promql-data-and-evaluation-time.md
+    title: 'The Series Model: Samples, Names And Labels'
+    path: sections/section-010/module-01/course-01-series-metric-names-and-labels.md
   - type: reading
-    title: Select One Population At An Evaluation Time — Task
+    title: The Four Label Matchers
+    path: sections/section-010/module-01/course-02-the-four-label-matchers.md
+  - type: reading
+    title: Expression Types, Range Selectors And Counting
+    path: sections/section-010/module-01/course-03-expression-types-ranges-and-counting.md
+  - type: reading
+    title: Question
     path: sections/section-010/module-01/labs/lab-01/question.md
   - type: lab
-    title: Select One Population At An Evaluation Time
+    title: Select Exact Populations Lab
     path: sections/section-010/module-01/labs/lab-01
     difficulty: intermediate
-    estimated_duration: 25m
+    estimated_duration: 20m
     topic: promql
     task_kind: build
-    learning_goals:
-    - Evaluate the required expression and preserve its labels, values and evaluation
-      time.
     tags:
-    - pca
     - promql
-  - type: reading
-    title: Select One Population At An Evaluation Time — Solution
-    path: sections/section-010/module-01/labs/lab-01/solution.md
-  - type: reading
-    title: 'Guided Practice: Select One Population At An Evaluation Time'
-    path: sections/section-010/module-01/course-02-guided-practice.md
+    - selectors
+    - matchers
+    - count
+    - range-vector
+    learning_goals:
+    - Write selectors with =, !=, =~ and !~ that return exact populations
+    - Select by metric name with __name__
+    - Return a range vector and count a result with count by
+    resources:
+    - name: Prometheus querying basics
+      url: https://prometheus.io/docs/prometheus/latest/querying/basics/
+    - name: Prometheus 3.0 migration guide
+      url: https://prometheus.io/docs/prometheus/latest/migration/
   - type: reading
     title: Summary
-    path: sections/section-010/module-01/course-03-summary.md
+    path: sections/section-010/module-01/course-04-summary.md
+  - type: reading
+    title: 'Evaluation Time: Lookback, Staleness, Offset And @'
+    path: sections/section-010/module-02/course.md
+  - type: reading
+    title: Lookback Delta And Staleness
+    path: sections/section-010/module-02/course-01-lookback-delta-and-staleness.md
+  - type: reading
+    title: The offset And @ Modifiers
+    path: sections/section-010/module-02/course-02-offset-and-the-at-modifier.md
+  - type: reading
+    title: Range Queries, Step And Window
+    path: sections/section-010/module-02/course-03-range-queries-step-and-window.md
+  - type: reading
+    title: Question
+    path: sections/section-010/module-02/labs/lab-01/question.md
+  - type: lab
+    title: Time-Shift Questions Lab
+    path: sections/section-010/module-02/labs/lab-01
+    difficulty: intermediate
+    estimated_duration: 20m
+    topic: promql
+    task_kind: build
+    tags:
+    - promql
+    - offset
+    - at-modifier
+    - lookback
+    - range-query
+    learning_goals:
+    - Move selectors with offset, negative offset and @
+    - Use @ start() in a range query
+    - Combine @ and offset and predict the evaluation time of the selector
+    resources:
+    - name: Prometheus querying basics
+      url: https://prometheus.io/docs/prometheus/latest/querying/basics/
+    - name: Prometheus HTTP API
+      url: https://prometheus.io/docs/prometheus/latest/querying/api/
+    - name: Prometheus 3.0 migration guide
+      url: https://prometheus.io/docs/prometheus/latest/migration/
+  - type: reading
+    title: Summary
+    path: sections/section-010/module-02/course-04-summary.md
+  - type: reading
+    title: Question
+    path: sections/section-010/capstone/labs/lab-01/question.md
+  - type: lab
+    title: Selecting Data Capstone
+    path: sections/section-010/capstone/labs/lab-01
+    difficulty: advanced
+    estimated_duration: 30m
+    topic: promql
+    task_kind: build
+    tags:
+    - promql
+    - selectors
+    - offset
+    - at-modifier
+    - count
+    - capstone
+    learning_goals:
+    - Combine matchers, __name__ selection and count by
+    - Combine range selectors, @ and offset
+    - Evaluate expressions at stated times
+    resources:
+    - name: Prometheus querying basics
+      url: https://prometheus.io/docs/prometheus/latest/querying/basics/
+    - name: Prometheus HTTP API
+      url: https://prometheus.io/docs/prometheus/latest/querying/api/
+  - type: quiz
+    title: 'Knowledge Check: Selecting Data'
+    path: sections/section-010/quiz.yaml
+    pass_score: 70
 - id: module-020
   title: Rates and Derivatives
-  description: Developed reading and reasoning for Rates and Derivatives.
-  maturity: alpha
+  description: 'Makes the reader able to turn counters and gauges into speeds, counts
+    and forecasts: rate, increase and irate with counter resets and aggregation, and
+    delta, deriv, predict_linear, changes and resets for gauges and events, then choose
+    the function for a given question.
+
+'
+  status: alpha
   content:
   - type: reading
-    title: Rates and Derivatives
+    title: Section Overview
     path: sections/section-020/README.md
   - type: reading
-    title: Counter Rates, Resets And Gauge Derivatives
+    title: Counters, rate And increase
     path: sections/section-020/module-01/course.md
   - type: reading
-    title: Counter Rates, Resets And Gauge Derivatives
-    path: sections/section-020/module-01/course-01-counter-rates-resets-and-gauge-derivatives.md
+    title: Counters, rate() And Window Sizing
+    path: sections/section-020/module-01/course-01-counters-rate-and-window-sizing.md
   - type: reading
-    title: Calculate Reset Aware Request Rates — Task
+    title: increase(), irate() And What Each Function Returns
+    path: sections/section-020/module-01/course-02-increase-irate-and-what-each-returns.md
+  - type: reading
+    title: Counter Resets And Aggregated Rates
+    path: sections/section-020/module-01/course-03-counter-resets-and-aggregated-rates.md
+  - type: reading
+    title: Question
     path: sections/section-020/module-01/labs/lab-01/question.md
   - type: lab
-    title: Calculate Reset Aware Request Rates
+    title: Rates And Increases Lab
     path: sections/section-020/module-01/labs/lab-01
     difficulty: intermediate
     estimated_duration: 25m
     topic: promql
     task_kind: build
-    learning_goals:
-    - Evaluate the required expression and preserve its labels, values and evaluation
-      time.
     tags:
-    - pca
     - promql
+    - rate
+    - increase
+    - irate
+    - counter-reset
+    learning_goals:
+    - Write rate, increase and irate expressions for counters
+    - Aggregate rates with sum by and sum without
+    - Compute a rate across a counter reset
+    resources:
+    - name: Prometheus query functions
+      url: https://prometheus.io/docs/prometheus/latest/querying/functions/
+    - name: Prometheus querying basics
+      url: https://prometheus.io/docs/prometheus/latest/querying/basics/
   - type: reading
-    title: Calculate Reset Aware Request Rates — Solution
-    path: sections/section-020/module-01/labs/lab-01/solution.md
+    title: Summary
+    path: sections/section-020/module-01/course-04-summary.md
   - type: reading
-    title: Measure A Counter Increase — Task
-    path: sections/section-020/module-01/labs/lab-02/question.md
+    title: 'Gauges: delta, deriv And predict_linear'
+    path: sections/section-020/module-02/course.md
+  - type: reading
+    title: delta(), idelta() And When A Gauge Is Not A Counter
+    path: sections/section-020/module-02/course-01-delta-idelta-and-gauges.md
+  - type: reading
+    title: deriv() And predict_linear()
+    path: sections/section-020/module-02/course-02-deriv-and-predict-linear.md
+  - type: reading
+    title: changes(), resets() And Choosing The Right Function
+    path: sections/section-020/module-02/course-03-changes-resets-and-choosing-the-function.md
+  - type: reading
+    title: Question
+    path: sections/section-020/module-02/labs/lab-01/question.md
   - type: lab
-    title: Measure A Counter Increase
-    path: sections/section-020/module-01/labs/lab-02
+    title: Derivative Questions Lab
+    path: sections/section-020/module-02/labs/lab-01
     difficulty: intermediate
     estimated_duration: 25m
     topic: promql
     task_kind: build
-    learning_goals:
-    - Evaluate the required expression and preserve its labels, values and evaluation
-      time.
     tags:
-    - pca
     - promql
-  - type: reading
-    title: Measure A Counter Increase — Solution
-    path: sections/section-020/module-01/labs/lab-02/solution.md
-  - type: reading
-    title: 'Guided Practice: Calculate Reset Aware Request Rates'
-    path: sections/section-020/module-01/course-02-guided-practice.md
+    - delta
+    - deriv
+    - predict-linear
+    - changes
+    - resets
+    learning_goals:
+    - Use delta, deriv and predict_linear on gauges
+    - Compute the time until a disk is full
+    - Count value changes and counter resets
+    resources:
+    - name: Prometheus query functions
+      url: https://prometheus.io/docs/prometheus/latest/querying/functions/
+    - name: Prometheus querying operators
+      url: https://prometheus.io/docs/prometheus/latest/querying/operators/
   - type: reading
     title: Summary
-    path: sections/section-020/module-01/course-03-summary.md
+    path: sections/section-020/module-02/course-04-summary.md
+  - type: reading
+    title: Question
+    path: sections/section-020/capstone/labs/lab-01/question.md
+  - type: lab
+    title: Rates and Derivatives Capstone
+    path: sections/section-020/capstone/labs/lab-01
+    difficulty: advanced
+    estimated_duration: 30m
+    topic: promql
+    task_kind: build
+    tags:
+    - promql
+    - rate
+    - deriv
+    - predict-linear
+    - resets
+    - capstone
+    learning_goals:
+    - Combine counter and gauge functions in one report
+    - Compare a rate across a restart
+    - Calculate an hourly error share from increase
+    resources:
+    - name: Prometheus query functions
+      url: https://prometheus.io/docs/prometheus/latest/querying/functions/
+    - name: Prometheus querying basics
+      url: https://prometheus.io/docs/prometheus/latest/querying/basics/
+  - type: quiz
+    title: 'Knowledge Check: Rates and Derivatives'
+    path: sections/section-020/quiz.yaml
+    pass_score: 70
 - id: module-030
-  title: Aggregating over time
-  description: Developed reading and reasoning for Aggregating over time.
-  maturity: alpha
+  title: Aggregating Over Time
+  description: 'Makes the reader able to reduce a window of samples to one value:
+    the over_time functions for gauges, quantiles, spread, last value and presence,
+    the choice of window, and subqueries that apply those functions to computed expressions
+    such as a summed rate.
+
+'
+  status: alpha
   content:
   - type: reading
-    title: Aggregating over time
+    title: Section Overview
     path: sections/section-030/README.md
   - type: reading
-    title: Aggregating Samples Across Time Windows
+    title: The over_time Functions
     path: sections/section-030/module-01/course.md
   - type: reading
-    title: Aggregating Samples Across Time Windows
-    path: sections/section-030/module-01/course-01-aggregating-samples-across-time-windows.md
+    title: Aggregating A Gauge Over A Window
+    path: sections/section-030/module-01/course-01-aggregating-a-gauge-over-a-window.md
   - type: reading
-    title: Summarise A Gauge Over Time — Task
+    title: Quantiles, Spread, Last Value And Presence
+    path: sections/section-030/module-01/course-02-quantiles-spread-last-value-and-presence.md
+  - type: reading
+    title: Choosing The Window And Avoiding Misleading Averages
+    path: sections/section-030/module-01/course-03-choosing-the-window-and-avoiding-misleading-averages.md
+  - type: reading
+    title: Question
     path: sections/section-030/module-01/labs/lab-01/question.md
   - type: lab
-    title: Summarise A Gauge Over Time
+    title: Window Questions Lab
     path: sections/section-030/module-01/labs/lab-01
     difficulty: intermediate
-    estimated_duration: 25m
+    estimated_duration: 20m
     topic: promql
     task_kind: build
-    learning_goals:
-    - Evaluate the required expression and preserve its labels, values and evaluation
-      time.
     tags:
-    - pca
     - promql
-  - type: reading
-    title: Summarise A Gauge Over Time — Solution
-    path: sections/section-030/module-01/labs/lab-01/solution.md
-  - type: reading
-    title: 'Guided Practice: Summarise A Gauge Over Time'
-    path: sections/section-030/module-01/course-02-guided-practice.md
+    - over-time
+    - quantile
+    - stddev
+    - last-over-time
+    learning_goals:
+    - Reduce a gauge window with min_over_time, quantile_over_time and stddev_over_time
+    - Use last_over_time to reach back past the lookback delta
+    - Choose a window that matches the cycle of the data
+    resources:
+    - name: Prometheus query functions
+      url: https://prometheus.io/docs/prometheus/latest/querying/functions/
+    - name: Prometheus querying basics
+      url: https://prometheus.io/docs/prometheus/latest/querying/basics/
   - type: reading
     title: Summary
-    path: sections/section-030/module-01/course-03-summary.md
+    path: sections/section-030/module-01/course-04-summary.md
+  - type: reading
+    title: Subqueries And Nested Time Aggregation
+    path: sections/section-030/module-02/course.md
+  - type: reading
+    title: Subquery Syntax And Evaluation Times
+    path: sections/section-030/module-02/course-01-subquery-syntax-and-evaluation-times.md
+  - type: reading
+    title: Nesting Time Aggregation With Aggregates And Rates
+    path: sections/section-030/module-02/course-02-nesting-time-aggregation-with-aggregates-and-rates.md
+  - type: reading
+    title: Cost, Recording Rules And Nesting Pitfalls
+    path: sections/section-030/module-02/course-03-cost-recording-rules-and-nesting-pitfalls.md
+  - type: reading
+    title: Question
+    path: sections/section-030/module-02/labs/lab-01/question.md
+  - type: lab
+    title: Subquery Questions Lab
+    path: sections/section-030/module-02/labs/lab-01
+    difficulty: intermediate
+    estimated_duration: 20m
+    topic: promql
+    task_kind: build
+    tags:
+    - promql
+    - subquery
+    - over-time
+    - rate
+    learning_goals:
+    - Write a subquery with an explicit range and step
+    - Combine max_over_time, min_over_time and avg_over_time with sum by and rate
+    - Evaluate subqueries at a stated time
+    resources:
+    - name: Prometheus querying basics
+      url: https://prometheus.io/docs/prometheus/latest/querying/basics/
+    - name: Prometheus query functions
+      url: https://prometheus.io/docs/prometheus/latest/querying/functions/
+    - name: Prometheus querying examples
+      url: https://prometheus.io/docs/prometheus/latest/querying/examples/
+  - type: reading
+    title: Summary
+    path: sections/section-030/module-02/course-04-summary.md
+  - type: reading
+    title: Question
+    path: sections/section-030/capstone/labs/lab-01/question.md
+  - type: lab
+    title: Aggregating Over Time Capstone
+    path: sections/section-030/capstone/labs/lab-01
+    difficulty: advanced
+    estimated_duration: 30m
+    topic: promql
+    task_kind: build
+    tags:
+    - promql
+    - over-time
+    - subquery
+    - absent-over-time
+    - capstone
+    learning_goals:
+    - Choose between a plain range selector and a subquery
+    - Test for missing data with absent_over_time
+    - Combine sums, rates and over_time functions in one expression
+    resources:
+    - name: Prometheus query functions
+      url: https://prometheus.io/docs/prometheus/latest/querying/functions/
+    - name: Prometheus querying basics
+      url: https://prometheus.io/docs/prometheus/latest/querying/basics/
+    - name: Prometheus recording rules
+      url: https://prometheus.io/docs/prometheus/latest/configuration/recording_rules/
+  - type: quiz
+    title: 'Knowledge Check: Aggregating Over Time'
+    path: sections/section-030/quiz.yaml
+    pass_score: 70
 - id: module-040
-  title: Aggregating over dimensions
-  description: Developed reading and reasoning for Aggregating over dimensions.
-  maturity: alpha
+  title: Aggregating Over Dimensions
+  description: 'Makes the reader able to collapse series with the PromQL aggregation
+    operators and control the result labels with by and without, rank series with
+    topk and bottomk, describe a set of values with quantile, stddev, stdvar and count_values,
+    average correctly, and avoid aggregates that hide a failing instance.
+
+'
+  status: alpha
   content:
   - type: reading
-    title: Aggregating over dimensions
+    title: Section Overview
     path: sections/section-040/README.md
   - type: reading
-    title: Aggregating Across Labels Without Losing Meaning
+    title: Aggregation Operators With by And without
     path: sections/section-040/module-01/course.md
   - type: reading
-    title: Aggregating Across Labels Without Losing Meaning
-    path: sections/section-040/module-01/course-01-aggregating-across-labels-without-losing-meaning.md
+    title: Aggregation With by And without
+    path: sections/section-040/module-01/course-01-aggregation-operators-by-and-without.md
   - type: reading
-    title: Aggregate Across Status Labels — Task
+    title: Sum Of Rate By Instance And Mode
+    path: sections/section-040/module-01/course-02-sum-of-rate-by-instance-and-mode.md
+  - type: reading
+    title: Count, Cardinality And The up Metric
+    path: sections/section-040/module-01/course-03-count-and-cardinality-up.md
+  - type: reading
+    title: Question
     path: sections/section-040/module-01/labs/lab-01/question.md
   - type: lab
-    title: Aggregate Across Status Labels
+    title: Aggregation Operators With by And without Lab
     path: sections/section-040/module-01/labs/lab-01
     difficulty: intermediate
     estimated_duration: 25m
     topic: promql
     task_kind: build
-    learning_goals:
-    - Evaluate the required expression and preserve its labels, values and evaluation
-      time.
     tags:
-    - pca
     - promql
-  - type: reading
-    title: Aggregate Across Status Labels — Solution
-    path: sections/section-040/module-01/labs/lab-01/solution.md
-  - type: reading
-    title: 'Guided Practice: Aggregate Across Status Labels'
-    path: sections/section-040/module-01/course-02-guided-practice.md
+    - aggregation
+    - by
+    - without
+    - sum
+    - rate
+    - count
+    - up
+    learning_goals:
+    - Sum a rate by job and by instance and mode
+    - Count targets that are down with a filter and count by
+    - Remove one label with without and keep the others
+    resources:
+    - name: PromQL aggregation operators
+      url: https://prometheus.io/docs/prometheus/latest/querying/operators/#aggregation-operators
+    - name: PromQL querying basics
+      url: https://prometheus.io/docs/prometheus/latest/querying/basics/
   - type: reading
     title: Summary
-    path: sections/section-040/module-01/course-03-summary.md
+    path: sections/section-040/module-01/course-04-summary.md
+  - type: reading
+    title: topk, bottomk, quantile, count_values And Statistics
+    path: sections/section-040/module-02/course.md
+  - type: reading
+    title: topk And bottomk
+    path: sections/section-040/module-02/course-01-topk-and-bottomk.md
+  - type: reading
+    title: quantile, stddev, stdvar And count_values
+    path: sections/section-040/module-02/course-02-quantile-stddev-count-values.md
+  - type: reading
+    title: Correct Averaging And Hidden Failures
+    path: sections/section-040/module-02/course-03-correct-averaging-and-hidden-failures.md
+  - type: reading
+    title: Question
+    path: sections/section-040/module-02/labs/lab-01/question.md
+  - type: lab
+    title: Ranking And Statistics Lab
+    path: sections/section-040/module-02/labs/lab-01
+    difficulty: intermediate
+    estimated_duration: 30m
+    topic: promql
+    task_kind: build
+    tags:
+    - promql
+    - topk
+    - bottomk
+    - quantile
+    - count_values
+    - weighted-average
+    learning_goals:
+    - Rank series with topk and bottomk
+    - Compute a quantile across series and count values
+    - Write a weighted error ratio and a weighted average duration without avg
+    resources:
+    - name: PromQL aggregation operators
+      url: https://prometheus.io/docs/prometheus/latest/querying/operators/#aggregation-operators
+    - name: PromQL functions
+      url: https://prometheus.io/docs/prometheus/latest/querying/functions/
+  - type: reading
+    title: Summary
+    path: sections/section-040/module-02/course-04-summary.md
+  - type: reading
+    title: Question
+    path: sections/section-040/capstone/labs/lab-01/question.md
+  - type: lab
+    title: Aggregating Over Dimensions Capstone
+    path: sections/section-040/capstone/labs/lab-01
+    difficulty: advanced
+    estimated_duration: 30m
+    topic: promql
+    task_kind: build
+    tags:
+    - promql
+    - aggregation
+    - topk
+    - stddev
+    - count
+    - up
+    - weighted-average
+    learning_goals:
+    - Compute a weighted error ratio per job
+    - Find a failed target with min by job
+    - Rank instances, measure spread and count a count
+    resources:
+    - name: PromQL aggregation operators
+      url: https://prometheus.io/docs/prometheus/latest/querying/operators/#aggregation-operators
+    - name: PromQL querying basics
+      url: https://prometheus.io/docs/prometheus/latest/querying/basics/
+  - type: quiz
+    title: 'Knowledge Check: Aggregating Over Dimensions'
+    path: sections/section-040/quiz.yaml
+    pass_score: 70
 - id: module-050
-  title: Binary operators
-  description: Developed reading and reasoning for Binary operators.
-  maturity: alpha
+  title: Binary Operators
+  description: 'Makes the reader able to combine values with PromQL binary operators:
+    arithmetic, comparison with filtering and the bool modifier, precedence and division
+    by zero, then one-to-one and many-to-one vector matching with on, ignoring, group_left
+    and group_right, and the set operators and, or and unless.
+
+'
+  status: alpha
   content:
   - type: reading
-    title: Binary operators
+    title: Section Overview
     path: sections/section-050/README.md
   - type: reading
-    title: Binary Operators And Vector Matching
+    title: Arithmetic, Comparison And Precedence
     path: sections/section-050/module-01/course.md
   - type: reading
-    title: Binary Operators And Vector Matching
-    path: sections/section-050/module-01/course-01-binary-operators-and-vector-matching.md
+    title: Arithmetic Operators On Scalars And Vectors
+    path: sections/section-050/module-01/course-01-arithmetic-operators.md
   - type: reading
-    title: Match Vectors Before Dividing — Task
+    title: Comparison Operators, Filtering And The bool Modifier
+    path: sections/section-050/module-01/course-02-comparison-operators-and-bool.md
+  - type: reading
+    title: Operator Precedence, Error Ratios And Division By Zero
+    path: sections/section-050/module-01/course-03-precedence-error-ratio-and-division.md
+  - type: reading
+    title: Question
     path: sections/section-050/module-01/labs/lab-01/question.md
   - type: lab
-    title: Match Vectors Before Dividing
+    title: Arithmetic, Comparison And Precedence Lab
     path: sections/section-050/module-01/labs/lab-01
     difficulty: intermediate
-    estimated_duration: 25m
+    estimated_duration: 20m
     topic: promql
     task_kind: build
-    learning_goals:
-    - Evaluate the required expression and preserve its labels, values and evaluation
-      time.
     tags:
-    - pca
     - promql
-  - type: reading
-    title: Match Vectors Before Dividing — Solution
-    path: sections/section-050/module-01/labs/lab-01/solution.md
-  - type: reading
-    title: 'Guided Practice: Match Vectors Before Dividing'
-    path: sections/section-050/module-01/course-02-guided-practice.md
+    - binary-operators
+    - arithmetic
+    - comparison
+    - bool
+    - ratio
+    learning_goals:
+    - Divide two gauges to get a ratio and keep its labels
+    - Filter a ratio with a threshold and return 0 or 1 with bool
+    - Calculate a value with several operators in the right order
+    resources:
+    - name: Prometheus querying operators
+      url: https://prometheus.io/docs/prometheus/latest/querying/operators/
+    - name: Prometheus querying basics
+      url: https://prometheus.io/docs/prometheus/latest/querying/basics/
   - type: reading
     title: Summary
-    path: sections/section-050/module-01/course-03-summary.md
+    path: sections/section-050/module-01/course-04-summary.md
+  - type: reading
+    title: Vector Matching And Set Operators
+    path: sections/section-050/module-02/course.md
+  - type: reading
+    title: One-To-One Matching With on And ignoring
+    path: sections/section-050/module-02/course-01-one-to-one-matching.md
+  - type: reading
+    title: Many-To-One Matching With group_left And group_right
+    path: sections/section-050/module-02/course-02-group-left-and-group-right.md
+  - type: reading
+    title: 'Set Operators: and, or And unless'
+    path: sections/section-050/module-02/course-03-set-operators.md
+  - type: reading
+    title: Question
+    path: sections/section-050/module-02/labs/lab-01/question.md
+  - type: lab
+    title: Vector Matching And Set Operators Lab
+    path: sections/section-050/module-02/labs/lab-01
+    difficulty: intermediate
+    estimated_duration: 20m
+    topic: promql
+    task_kind: build
+    tags:
+    - promql
+    - binary-operators
+    - vector-matching
+    - group-left
+    - set-operators
+    learning_goals:
+    - Match series with ignoring and on
+    - Copy version and team labels with group_left
+    - Keep or remove series with and and unless
+    resources:
+    - name: Prometheus querying operators
+      url: https://prometheus.io/docs/prometheus/latest/querying/operators/
+    - name: Prometheus querying basics
+      url: https://prometheus.io/docs/prometheus/latest/querying/basics/
+  - type: reading
+    title: Summary
+    path: sections/section-050/module-02/course-04-summary.md
+  - type: reading
+    title: Question
+    path: sections/section-050/capstone/labs/lab-01/question.md
+  - type: lab
+    title: Binary Operators Capstone
+    path: sections/section-050/capstone/labs/lab-01
+    difficulty: advanced
+    estimated_duration: 30m
+    topic: promql
+    task_kind: build
+    tags:
+    - promql
+    - binary-operators
+    - error-ratio
+    - group-left
+    - set-operators
+    - capstone
+    learning_goals:
+    - Calculate an error ratio and divide it by an information metric
+    - Combine a set operator with a time based comparison
+    - Chain two group_left matches after a filter
+    resources:
+    - name: Prometheus querying operators
+      url: https://prometheus.io/docs/prometheus/latest/querying/operators/
+    - name: Prometheus querying basics
+      url: https://prometheus.io/docs/prometheus/latest/querying/basics/
+  - type: quiz
+    title: 'Knowledge Check: Binary Operators'
+    path: sections/section-050/quiz.yaml
+    pass_score: 70
 - id: module-060
   title: Histograms
-  description: Developed reading and reasoning for Histograms.
-  maturity: alpha
+  description: 'Makes the reader able to read classic histograms and compute quantiles,
+    means and shares from them: cumulative le buckets, rate and histogram_quantile
+    with sum by (le), the accuracy limit of interpolation, aggregation across instances,
+    counter resets, mean duration from sum and count, the share of requests under
+    a bucket bound, and the difference between histograms, summaries and native histograms.
+
+'
+  status: alpha
   content:
   - type: reading
-    title: Histograms
+    title: Section Overview
     path: sections/section-060/README.md
   - type: reading
-    title: Histogram Buckets, Quantiles And Distribution Aggregation
+    title: Classic Histograms And histogram_quantile
     path: sections/section-060/module-01/course.md
   - type: reading
-    title: Histogram Buckets, Quantiles And Distribution Aggregation
-    path: sections/section-060/module-01/course-01-histogram-buckets-quantiles-and-distribution-aggregation.md
+    title: What A Classic Histogram Exposes
+    path: sections/section-060/module-01/course-01-what-a-classic-histogram-exposes.md
   - type: reading
-    title: Estimate A Histogram Quantile — Task
+    title: Rate Over Buckets And histogram_quantile
+    path: sections/section-060/module-01/course-02-rate-over-buckets-and-histogram-quantile.md
+  - type: reading
+    title: Aggregating Buckets Across Instances
+    path: sections/section-060/module-01/course-03-aggregating-buckets-across-instances.md
+  - type: reading
+    title: Question
     path: sections/section-060/module-01/labs/lab-01/question.md
   - type: lab
-    title: Estimate A Histogram Quantile
+    title: Classic Histograms And histogram_quantile Lab
     path: sections/section-060/module-01/labs/lab-01
     difficulty: intermediate
-    estimated_duration: 25m
+    estimated_duration: 20m
     topic: promql
     task_kind: build
-    learning_goals:
-    - Evaluate the required expression and preserve its labels, values and evaluation
-      time.
     tags:
-    - pca
-    - promql
-  - type: reading
-    title: Estimate A Histogram Quantile — Solution
-    path: sections/section-060/module-01/labs/lab-01/solution.md
-  - type: reading
-    title: Calculate Mean Duration From Sum And Count — Task
-    path: sections/section-060/module-01/labs/lab-02/question.md
-  - type: lab
-    title: Calculate Mean Duration From Sum And Count
-    path: sections/section-060/module-01/labs/lab-02
-    difficulty: intermediate
-    estimated_duration: 25m
-    topic: promql
-    task_kind: build
+    - histograms
+    - histogram-quantile
+    - rate
+    - buckets
+    - aggregation
+    - counter-reset
     learning_goals:
-    - Evaluate the required expression and preserve its labels, values and evaluation
-      time.
-    tags:
-    - pca
-    - promql
-  - type: reading
-    title: Calculate Mean Duration From Sum And Count — Solution
-    path: sections/section-060/module-01/labs/lab-02/solution.md
-  - type: reading
-    title: 'Guided Practice: Estimate A Histogram Quantile'
-    path: sections/section-060/module-01/course-02-guided-practice.md
+    - Estimate a 0.9 quantile per instance and for the whole service from bucket rates
+    - Keep le in the aggregation and avoid averaging quantiles
+    - Subtract neighbouring cumulative buckets with ignoring(le)
+    - Evaluate a fleet quantile in a window that contains a counter reset
+    resources:
+    - name: Prometheus histograms and summaries
+      url: https://prometheus.io/docs/practices/histograms/
+    - name: 'Query functions: histogram_quantile'
+      url: https://prometheus.io/docs/prometheus/latest/querying/functions/#histogram_quantile
   - type: reading
     title: Summary
-    path: sections/section-060/module-01/course-03-summary.md
+    path: sections/section-060/module-01/course-04-summary.md
+  - type: reading
+    title: Means, Fractions And Native Histograms
+    path: sections/section-060/module-02/course.md
+  - type: reading
+    title: Mean Duration From Sum And Count
+    path: sections/section-060/module-02/course-01-mean-duration-from-sum-and-count.md
+  - type: reading
+    title: Share Of Requests Under A Threshold
+    path: sections/section-060/module-02/course-02-share-of-requests-under-a-threshold.md
+  - type: reading
+    title: Histograms, Summaries And Native Histograms
+    path: sections/section-060/module-02/course-03-histograms-summaries-and-native-histograms.md
+  - type: reading
+    title: Question
+    path: sections/section-060/module-02/labs/lab-01/question.md
+  - type: lab
+    title: Means, Fractions And Native Histograms Lab
+    path: sections/section-060/module-02/labs/lab-01
+    difficulty: intermediate
+    estimated_duration: 20m
+    topic: promql
+    task_kind: build
+    tags:
+    - histograms
+    - mean
+    - sum
+    - count
+    - fraction
+    - ignoring
+    learning_goals:
+    - Compute the mean duration per instance and for the whole service from rate of
+      sum and count
+    - Compute the share of requests under and over a bucket bound
+    - Match a bucket series to a series without le
+    resources:
+    - name: Prometheus histograms and summaries
+      url: https://prometheus.io/docs/practices/histograms/
+    - name: 'Query operators: vector matching'
+      url: https://prometheus.io/docs/prometheus/latest/querying/operators/#vector-matching
+  - type: reading
+    title: Summary
+    path: sections/section-060/module-02/course-04-summary.md
+  - type: reading
+    title: Question
+    path: sections/section-060/capstone/labs/lab-01/question.md
+  - type: lab
+    title: Histograms Capstone
+    path: sections/section-060/capstone/labs/lab-01
+    difficulty: advanced
+    estimated_duration: 30m
+    topic: promql
+    task_kind: build
+    tags:
+    - histograms
+    - histogram-quantile
+    - mean
+    - fraction
+    - counter-reset
+    - aggregation
+    learning_goals:
+    - Report per-instance and fleet quantiles, a mean and a share from one histogram
+    - Filter instances with a comparison on a quantile
+    - Evaluate a fleet quantile across a counter reset
+    resources:
+    - name: Prometheus histograms and summaries
+      url: https://prometheus.io/docs/practices/histograms/
+    - name: 'Query functions: histogram_quantile'
+      url: https://prometheus.io/docs/prometheus/latest/querying/functions/#histogram_quantile
+    - name: Query operators
+      url: https://prometheus.io/docs/prometheus/latest/querying/operators/
+  - type: quiz
+    title: 'Knowledge Check: Histograms'
+    path: sections/section-060/quiz.yaml
+    pass_score: 70
 - id: module-070
   title: Timestamp Metrics
-  description: Developed reading and reasoning for Timestamp Metrics.
-  maturity: alpha
+  description: 'Makes the reader able to work with time in PromQL: the evaluation
+    time returned by time(), the sample time returned by timestamp(), metrics whose
+    value is a Unix time, and the tests for down, missing, stale and restarted series.
+    It prepares overdue-work and freshness alerts that stay silent when data disappears.
+
+'
+  status: alpha
   content:
   - type: reading
-    title: Timestamp Metrics
+    title: Section Overview
     path: sections/section-070/README.md
   - type: reading
-    title: Event Timestamps, Sample Freshness And Overdue Work
+    title: time, timestamp And Age Of An Event
     path: sections/section-070/module-01/course.md
   - type: reading
-    title: Event Timestamps, Sample Freshness And Overdue Work
-    path: sections/section-070/module-01/course-01-event-timestamps-sample-freshness-and-overdue-work.md
+    title: 'time() And timestamp(): Two Different Clocks'
+    path: sections/section-070/module-01/course-01-time-versus-timestamp.md
   - type: reading
-    title: Calculate Age From A Timestamp Metric — Task
+    title: 'The Age Of An Event: Uptime And Last Success'
+    path: sections/section-070/module-01/course-02-age-of-an-event.md
+  - type: reading
+    title: 'Overdue Work: Thresholds And Unit Conversion'
+    path: sections/section-070/module-01/course-03-overdue-work-and-units.md
+  - type: reading
+    title: Question
     path: sections/section-070/module-01/labs/lab-01/question.md
   - type: lab
-    title: Calculate Age From A Timestamp Metric
+    title: Age And Uptime From Timestamps Lab
     path: sections/section-070/module-01/labs/lab-01
     difficulty: intermediate
-    estimated_duration: 25m
+    estimated_duration: 20m
     topic: promql
     task_kind: build
-    learning_goals:
-    - Evaluate the required expression and preserve its labels, values and evaluation
-      time.
     tags:
-    - pca
     - promql
-  - type: reading
-    title: Calculate Age From A Timestamp Metric — Solution
-    path: sections/section-070/module-01/labs/lab-01/solution.md
-  - type: reading
-    title: 'Guided Practice: Calculate Age From A Timestamp Metric'
-    path: sections/section-070/module-01/course-02-guided-practice.md
+    - time
+    - timestamp
+    - uptime
+    - age
+    - overdue
+    - unit-conversion
+    learning_goals:
+    - Compute uptime and backup age with time() minus a timestamp-valued metric
+    - Convert an age to minutes or hours and filter it with a threshold
+    - Use timestamp(up) to measure the freshness of the newest sample
+    resources:
+    - name: Prometheus query functions
+      url: https://prometheus.io/docs/prometheus/latest/querying/functions/
+    - name: Prometheus querying basics
+      url: https://prometheus.io/docs/prometheus/latest/querying/basics/
+    - name: Prometheus query operators
+      url: https://prometheus.io/docs/prometheus/latest/querying/operators/
   - type: reading
     title: Summary
-    path: sections/section-070/module-01/course-03-summary.md
+    path: sections/section-070/module-01/course-04-summary.md
+  - type: reading
+    title: Freshness, Absence And Gaps
+    path: sections/section-070/module-02/course.md
+  - type: reading
+    title: up And What A Missing Series Means
+    path: sections/section-070/module-02/course-01-up-and-missing-series.md
+  - type: reading
+    title: absent() And absent_over_time()
+    path: sections/section-070/module-02/course-02-absent-and-absent-over-time.md
+  - type: reading
+    title: Restarts, Stale Series And Gaps
+    path: sections/section-070/module-02/course-03-restarts-stale-series-and-gaps.md
+  - type: reading
+    title: Question
+    path: sections/section-070/module-02/labs/lab-01/question.md
+  - type: lab
+    title: Absence And Freshness Lab
+    path: sections/section-070/module-02/labs/lab-01
+    difficulty: intermediate
+    estimated_duration: 20m
+    topic: promql
+    task_kind: build
+    tags:
+    - promql
+    - up
+    - absent
+    - absent-over-time
+    - changes
+    - staleness
+    - restarts
+    learning_goals:
+    - Find failing targets with up == 0 and missing series with absent()
+    - Detect restarts with changes() on a start time metric
+    - Find stale and vanished series with timestamp(), offset and unless
+    resources:
+    - name: Prometheus query functions
+      url: https://prometheus.io/docs/prometheus/latest/querying/functions/
+    - name: Prometheus querying basics
+      url: https://prometheus.io/docs/prometheus/latest/querying/basics/
+    - name: Prometheus instrumentation and the up metric
+      url: https://prometheus.io/docs/concepts/jobs_instances/
+  - type: reading
+    title: Summary
+    path: sections/section-070/module-02/course-04-summary.md
+  - type: reading
+    title: Question
+    path: sections/section-070/capstone/labs/lab-01/question.md
+  - type: lab
+    title: Timestamp Metrics Capstone
+    path: sections/section-070/capstone/labs/lab-01
+    difficulty: advanced
+    estimated_duration: 30m
+    topic: promql
+    task_kind: build
+    tags:
+    - promql
+    - time
+    - timestamp
+    - absent-over-time
+    - changes
+    - offset
+    - unless
+    learning_goals:
+    - Combine age computation, unit conversion and thresholds in one review
+    - Test for vanished series and absence over a range
+    - Detect restarts with a range that covers the event
+    resources:
+    - name: Prometheus query functions
+      url: https://prometheus.io/docs/prometheus/latest/querying/functions/
+    - name: Prometheus query operators
+      url: https://prometheus.io/docs/prometheus/latest/querying/operators/
+  - type: quiz
+    title: 'Knowledge Check: Timestamp Metrics'
+    path: sections/section-070/quiz.yaml
+    pass_score: 70
+  - type: quiz
+    title: 'Final Knowledge Check: PromQL'
+    path: sections/final-domain-quiz.yaml
+    pass_score: 70

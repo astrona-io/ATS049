@@ -1,0 +1,71 @@
+# yaml-language-server: $schema=https://cli.astrona.io/schema/lab-config.schema.json
+#
+# Lab (LAB). Graded against the live Prometheus server. UNTESTED: built
+# without a live run.
+apiVersion: astrona.io/v1
+metadata:
+  name: ats-049-lab-070-02
+  docs:
+    prerequisites: prerequisites.md
+    question: question.md
+    solution: solution.md
+
+runtime:
+  type: kind
+  kind:
+    image: kindest/node:v1.35.8
+    preloadImages:
+      - quay.io/prometheus/prometheus:v3.5.5
+      - docker.io/library/python:3.13-alpine
+
+bootstrap:
+  manifests:
+    - name: lab-start
+      type: file
+      source: manifests/lab-start.yaml
+  waitFor:
+    - resource: deploy/prometheus
+      namespace: starfleet
+    - resource: deploy/shuttle
+      namespace: starfleet
+
+# Applied only by `astrona test`: the reference solution (writes the answers).
+testing:
+  init:
+    - name: apply-solution
+      description: Write the reference answers
+      type: file
+      source: solution/apply.sh
+
+# AUTHOR: replace `scripts: []` with one entry per validation/validate-*.sh file,
+# each with name, description, type: file, source and hint.
+validation:
+  scripts:
+    - name: q1-failing-targets
+      description: q1 returns the failing up series at time 1767228300
+      type: file
+      source: validation/validate-q1-failing-targets.sh
+      hint: Use a comparison filter on up.
+    - name: q2-missing-probe
+      description: q2 returns the absent series for probe-1 with one label
+      type: file
+      source: validation/validate-q2-missing-probe.sh
+      hint: Put only the instance matcher inside absent().
+    - name: q3-restarts
+      description: q3 returns processes that restarted in the last hour
+      type: file
+      source: validation/validate-q3-restarts.sh
+      hint: Use changes() on process_start_time_seconds over [1h] and keep values above 0.
+    - name: q4-stale-series
+      description: q4 returns up series older than 60 seconds at time 1767228890
+      type: file
+      source: validation/validate-q4-stale-series.sh
+      hint: Use time() minus timestamp(up) and compare with 60.
+    - name: q5-vanished-series
+      description: q5 returns series that existed 10 minutes ago and are gone
+      type: file
+      source: validation/validate-q5-vanished-series.sh
+      hint: Use up offset 10m unless up.
+
+teardown:
+  keepCluster: false

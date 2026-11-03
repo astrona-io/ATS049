@@ -1,31 +1,65 @@
+# yaml-language-server: $schema=https://cli.astrona.io/schema/lab-config.schema.json
+#
+# The over_time Functions (LAB). Graded against the live Prometheus server. UNTESTED: built
+# without a live run.
 apiVersion: astrona.io/v1
 metadata:
-  name: ats-049-lab-030-01-01
+  name: ats-049-lab-030-01
   docs:
-    prerequisites: docs/prerequisites.md
-    examQuestion: question.md
-    caseStudy: docs/case-study.md
-    guide: solution.md
+    prerequisites: prerequisites.md
+    question: question.md
+    solution: solution.md
+
 runtime:
   type: kind
   kind:
-    image: kindest/node:v1.35.0@sha256:452d707d4862f52530247495d180205e029056831160e22870e37e3f6c1ac31f
-    nodes:
-      workers: 1
+    image: kindest/node:v1.35.8
+    preloadImages:
+      - quay.io/prometheus/prometheus:v3.5.5
+      - docker.io/library/python:3.13-alpine
+
 bootstrap:
-  init:
-  - name: seed-private-environment
-    type: file
-    source: bootstrap/setup.sh
-teardown:
-  keepCluster: false
+  manifests:
+    - name: lab-start
+      type: file
+      source: manifests/lab-start.yaml
+  waitFor:
+    - resource: deploy/prometheus
+      namespace: starfleet
+    - resource: deploy/shuttle
+      namespace: starfleet
+
+# Applied only by `astrona test`: the reference solution (writes the answers).
 testing:
   init:
-  - name: reference-result
-    type: file
-    source: solution/apply.sh
+    - name: apply-solution
+      description: Write the reference answers
+      type: file
+      source: solution/apply.sh
+
+# One entry per validation script.
 validation:
-  script:
-    name: verify-fields-and-live-evidence
-    type: file
-    source: validate.sh
+  scripts:
+    - name: lowest-queue-depth
+      description: "q1 returns the lowest queue depth of every series over the last 10 minutes"
+      type: file
+      source: validation/validate-lowest-queue-depth.sh
+      hint: "Use min_over_time with a 10m range on queue_depth. A 5m range misses the low point of bridge-0."
+    - name: temperature-p90
+      description: "q2 returns the 0.9 quantile of the CPU temperature over the last 10 minutes"
+      type: file
+      source: validation/validate-temperature-p90.sh
+      hint: "quantile_over_time takes the quantile (0 to 1) first and the range vector second."
+    - name: bridge-queue-spread
+      description: "q3 returns the standard deviation of the queue depth of the bridge job over 5 minutes"
+      type: file
+      source: validation/validate-bridge-queue-spread.sh
+      hint: "Select job=\"bridge\" in the selector and use stddev_over_time with a 5m range."
+    - name: last-temperature
+      description: "q4 returns the newest temperature of every probe within 15 minutes, with the metric name"
+      type: file
+      source: validation/validate-last-temperature.sh
+      hint: "last_over_time keeps the metric name and looks back as far as the range. One probe stopped reporting 10 minutes ago."
+
+teardown:
+  keepCluster: false

@@ -1,31 +1,70 @@
+# yaml-language-server: $schema=https://cli.astrona.io/schema/lab-config.schema.json
+#
+# Aggregation Operators With by And without (LAB). Graded against the live Prometheus server. UNTESTED: built
+# without a live run.
 apiVersion: astrona.io/v1
 metadata:
-  name: ats-049-lab-040-01-01
+  name: ats-049-lab-040-01
   docs:
-    prerequisites: docs/prerequisites.md
-    examQuestion: question.md
-    caseStudy: docs/case-study.md
-    guide: solution.md
+    prerequisites: prerequisites.md
+    question: question.md
+    solution: solution.md
+
 runtime:
   type: kind
   kind:
-    image: kindest/node:v1.35.0@sha256:452d707d4862f52530247495d180205e029056831160e22870e37e3f6c1ac31f
-    nodes:
-      workers: 1
+    image: kindest/node:v1.35.8
+    preloadImages:
+      - quay.io/prometheus/prometheus:v3.5.5
+      - docker.io/library/python:3.13-alpine
+
 bootstrap:
-  init:
-  - name: seed-private-environment
-    type: file
-    source: bootstrap/setup.sh
-teardown:
-  keepCluster: false
+  manifests:
+    - name: lab-start
+      type: file
+      source: manifests/lab-start.yaml
+  waitFor:
+    - resource: deploy/prometheus
+      namespace: starfleet
+    - resource: deploy/shuttle
+      namespace: starfleet
+
+# Applied only by `astrona test`: the reference solution (writes the answers).
 testing:
   init:
-  - name: reference-result
-    type: file
-    source: solution/apply.sh
+    - name: apply-solution
+      description: Write the reference answers
+      type: file
+      source: solution/apply.sh
+
+# One check per question. Each script reads the answer from the ConfigMap `answers`.
 validation:
-  script:
-    name: verify-fields-and-live-evidence
-    type: file
-    source: validate.sh
+  scripts:
+    - name: request-rate-per-job
+      description: Request rate per job
+      type: file
+      source: validation/validate-q1.sh
+      hint: Take the rate of every series first, then sum by job. The result has only the label job.
+    - name: cpu-rate-by-instance-and-mode
+      description: CPU seconds per second by instance and mode
+      type: file
+      source: validation/validate-q2.sh
+      hint: Remove the labels cpu and job. Evaluate at 1767228600 so probe-1 still has samples.
+    - name: series-per-metric-name
+      description: Series count per metric name for job bridge
+      type: file
+      source: validation/validate-q3.sh
+      hint: Select all series of the job with a selector that has no metric name, and keep __name__ in the by clause.
+    - name: failed-targets-per-job
+      description: Number of failed targets per job
+      type: file
+      source: validation/validate-q4.sh
+      hint: Keep only the series whose value is 0, then count them by job.
+    - name: rate-without-instance
+      description: Request rate with every label except instance
+      type: file
+      source: validation/validate-q5.sh
+      hint: Use without (instance) so job, method and status stay in the result.
+
+teardown:
+  keepCluster: false

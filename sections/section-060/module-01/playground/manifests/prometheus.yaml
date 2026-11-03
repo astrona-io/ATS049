@@ -1,0 +1,418 @@
+# Environment for the PromQL course: one Prometheus server loaded with a fixed,
+# generated dataset, and a `shuttle` pod that runs the query helper.
+#
+# The `dataset-code` ConfigMap holds a small Python script. An init container runs
+# it to write OpenMetrics text (one hour of samples, every 15 seconds, starting at
+# Unix time 1767225600), and a second init container turns that text into a
+# Prometheus data block with `promtool tsdb create-blocks-from openmetrics`.
+# Prometheus then starts with the block and scrapes nothing.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: starfleet
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: dataset-code
+  namespace: starfleet
+data:
+  gen_dataset.py: |
+    #!/usr/bin/env python3
+    """Deterministic PromQL training dataset in OpenMetrics text format.
+
+    Usage: python3 gen_dataset.py OUTPUT.om
+    Every sample is a pure function of the step number k (0..240).
+    Sample time = T0 + 15 * k seconds. T0 = 1767225600 (2026-01-01T00:00:00Z).
+    """
+    import sys
+
+    T0 = 1767225600
+    STEP = 15
+    N = 241  # k = 0..240, the last sample is at T0 + 3600
+
+
+    def ts(k):
+        return T0 + STEP * k
+
+
+    def defs():
+        """Return a list of (name, labels, function k -> value or None)."""
+        out = []
+
+        def add(name, labels, fn):
+            out.append((name, labels, fn))
+
+        # up: all targets scraped every 15 s.
+        # shuttle-0 fails for k in [160, 200); probe-1 is removed after k = 200.
+        for job, inst in [("bridge", "bridge-0:8080"), ("bridge", "bridge-1:8080"),
+                          ("shuttle", "shuttle-0:8080"), ("probe", "probe-0:9100"),
+                          ("probe", "probe-1:9100")]:
+            def up(k, inst=inst):
+                if inst == "probe-1:9100" and k > 200:
+                    return None
+                if inst == "shuttle-0:8080" and 160 <= k < 200:
+                    return 0
+                return 1
+            add("up", {"job": job, "instance": inst}, up)
+
+        # http_requests_total: counters with a constant increase per step.
+        # bridge-1 restarts at k = 120: every one of its counters drops to 0 there.
+        table = [
+            # job, instance, method, status, increase per 15 s, base value
+            ("bridge", "bridge-0:8080", "GET", "200", 150, 100000),
+            ("bridge", "bridge-0:8080", "POST", "200", 30, 20000),
+            ("bridge", "bridge-0:8080", "GET", "500", 6, 400),
+            ("bridge", "bridge-0:8080", "POST", "500", 3, 100),
+            ("bridge", "bridge-1:8080", "GET", "200", 120, 90000),
+            ("bridge", "bridge-1:8080", "POST", "200", 15, 15000),
+            ("bridge", "bridge-1:8080", "GET", "500", 3, 300),
+            ("bridge", "bridge-1:8080", "POST", "500", 0, 50),
+            ("shuttle", "shuttle-0:8080", "GET", "200", 60, 50000),
+            ("shuttle", "shuttle-0:8080", "GET", "500", 15, 800),
+        ]
+        for job, inst, method, status, inc, base in table:
+            def req(k, inst=inst, inc=inc, base=base):
+                if inst == "bridge-1:8080" and k >= 120:
+                    return (k - 120) * inc
+                return base + k * inc
+            add("http_requests_total",
+                {"job": job, "instance": inst, "method": method, "status": status}, req)
+
+        # queue_depth: gauges.
+        add("queue_depth", {"job": "bridge", "instance": "bridge-0:8080"},
+            lambda k: 10 + abs((k % 40) - 20))          # triangle wave 10..30, period 40 steps
+        add("queue_depth", {"job": "bridge", "instance": "bridge-1:8080"},
+            lambda k: 5 if k < 120 else 25)             # step from 5 to 25 at k = 120
+        add("queue_depth", {"job": "shuttle", "instance": "shuttle-0:8080"},
+            lambda k: 0 if k < 100 else 2 * (k - 100))  # ramp of 2 per step from k = 100
+
+        # disk gauges (probe): linear growth.
+        for inst, per_step in [("probe-0:9100", 15000000), ("probe-1:9100", 7500000)]:
+            def disk(k, per_step=per_step, inst=inst):
+                if inst == "probe-1:9100" and k > 200:
+                    return None
+                return 40000000000 + k * per_step
+            add("disk_used_bytes", {"job": "probe", "instance": inst, "mountpoint": "/"}, disk)
+            def total(k, inst=inst):
+                if inst == "probe-1:9100" and k > 200:
+                    return None
+                return 100000000000
+            add("disk_total_bytes", {"job": "probe", "instance": inst, "mountpoint": "/"}, total)
+
+        # temperature_celsius: linear gauges (probe).
+        add("temperature_celsius", {"job": "probe", "instance": "probe-0:9100", "sensor": "cpu"},
+            lambda k: 20 + 0.1 * k)
+        add("temperature_celsius", {"job": "probe", "instance": "probe-1:9100", "sensor": "cpu"},
+            lambda k: None if k > 200 else 30 - 0.05 * k)
+
+        # node_cpu_seconds_total: increase per 15 s step, probe instances.
+        cpu = {
+            "probe-0:9100": {"0": {"idle": 10.5, "user": 3.0, "system": 1.5},
+                             "1": {"idle": 7.5, "user": 5.25, "system": 2.25}},
+            "probe-1:9100": {"0": {"idle": 7.5, "user": 5.25, "system": 2.25},
+                             "1": {"idle": 10.5, "user": 3.0, "system": 1.5}},
+        }
+        for inst, cpus in cpu.items():
+            for cpu_id, modes in cpus.items():
+                for mode, inc in modes.items():
+                    def secs(k, inc=inc, inst=inst):
+                        if inst == "probe-1:9100" and k > 200:
+                            return None
+                        return 5000 + k * inc
+                    add("node_cpu_seconds_total",
+                        {"job": "probe", "instance": inst, "cpu": cpu_id, "mode": mode}, secs)
+
+        # Classic histogram http_request_duration_seconds (handler /orders).
+        # cumulative increase per 15 s for le = 0.05, 0.1, 0.25, 0.5, 1, +Inf
+        hist = {
+            "bridge-0:8080": ([60, 120, 170, 190, 198, 200], 30.0),
+            "bridge-1:8080": ([10, 40, 80, 95, 99, 100], 40.0),
+        }
+        les = ["0.05", "0.1", "0.25", "0.5", "1", "+Inf"]
+        for inst, (incs, sum_inc) in hist.items():
+            def h(k, inc, inst=inst):
+                if inst == "bridge-1:8080" and k >= 120:
+                    return (k - 120) * inc
+                return k * inc
+            for le, inc in zip(les, incs):
+                add("http_request_duration_seconds_bucket",
+                    {"job": "bridge", "instance": inst, "handler": "/orders", "le": le},
+                    lambda k, inc=inc, h=h: h(k, inc))
+            add("http_request_duration_seconds_sum",
+                {"job": "bridge", "instance": inst, "handler": "/orders"},
+                lambda k, inc=sum_inc, h=h: h(k, inc))
+            add("http_request_duration_seconds_count",
+                {"job": "bridge", "instance": inst, "handler": "/orders"},
+                lambda k, inc=incs[-1], h=h: h(k, inc))
+
+        # Timestamp metrics (values are Unix seconds).
+        add("process_start_time_seconds", {"job": "bridge", "instance": "bridge-0:8080"},
+            lambda k: T0 - 86400)
+        add("process_start_time_seconds", {"job": "bridge", "instance": "bridge-1:8080"},
+            lambda k: T0 - 7200 if k < 120 else T0 + 1800)
+        add("process_start_time_seconds", {"job": "shuttle", "instance": "shuttle-0:8080"},
+            lambda k: T0 - 600)
+        add("process_start_time_seconds", {"job": "probe", "instance": "probe-0:9100"},
+            lambda k: T0 - 172800)
+        add("process_start_time_seconds", {"job": "probe", "instance": "probe-1:9100"},
+            lambda k: None if k > 200 else T0 - 172800)
+        # backup_last_success_timestamp_seconds
+        add("backup_last_success_timestamp_seconds", {"job": "shuttle", "instance": "shuttle-0:8080"},
+            lambda k: T0 + 300 * (k // 20) - 300)              # refreshed every 300 s
+        add("backup_last_success_timestamp_seconds", {"job": "probe", "instance": "probe-0:9100"},
+            lambda k: T0 + 600 * (min(k, 120) // 40) - 600)    # stops refreshing after k = 120
+        add("backup_last_success_timestamp_seconds", {"job": "probe", "instance": "probe-1:9100"},
+            lambda k: None if k > 200 else T0 + 1200 * (k // 80) - 1200)
+
+        # Info-style and constant gauges.
+        for job, inst, ver, team in [("bridge", "bridge-0:8080", "1.4.2", "ops"),
+                                     ("bridge", "bridge-1:8080", "1.5.0", "ops"),
+                                     ("shuttle", "shuttle-0:8080", "2.0.1", "logistics")]:
+            add("build_info", {"job": job, "instance": inst, "version": ver}, lambda k: 1)
+            add("team_info", {"job": job, "instance": inst, "team": team}, lambda k: 1)
+        add("error_budget_ratio", {"job": "bridge"}, lambda k: 0.02)
+        add("error_budget_ratio", {"job": "shuttle"}, lambda k: 0.1)
+        return out
+
+
+    def fmt(v):
+        if isinstance(v, int):
+            return str(v)
+        return repr(float(v)) if v != int(v) else str(int(v))
+
+
+    def esc(v):
+        return v.replace("\\", "\\\\").replace('"', '\\"')
+
+
+    def write(path):
+        series = {}
+        for name, labels, fn in defs():
+            series.setdefault(name, []).append((labels, fn))
+        with open(path, "w") as f:
+            for name in series:
+                f.write("# TYPE %s unknown\n" % name)
+                for labels, fn in series[name]:
+                    lab = ",".join('%s="%s"' % (k, esc(v)) for k, v in labels.items())
+                    for k in range(N):
+                        v = fn(k)
+                        if v is None:
+                            continue
+                        f.write("%s{%s} %s %d\n" % (name, lab, fmt(v), ts(k)))
+            f.write("# EOF\n")
+
+
+    if __name__ == "__main__":
+        write(sys.argv[1])
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: tools
+  namespace: starfleet
+data:
+  pq.py: |
+    #!/usr/bin/env python3
+    """Run one PromQL query against the Prometheus API and print the result.
+
+    Usage:
+      pq.py EXPR                          instant query at the default evaluation time
+      pq.py EXPR --time 1767229200        instant query at a given Unix time
+      pq.py EXPR --now                    instant query without a time (server uses the current time)
+      pq.py EXPR --range START END STEP   range query (START and END in Unix seconds, STEP in seconds)
+      pq.py --json ...                    print the raw API response instead
+    """
+    import json
+    import sys
+    import urllib.error
+    import urllib.parse
+    import urllib.request
+
+    BASE = "http://prometheus:9090"
+    DEFAULT_TIME = "1767229200"
+
+
+    def labels(metric):
+        name = metric.get("__name__", "")
+        rest = ", ".join('%s="%s"' % (k, v) for k, v in sorted(metric.items()) if k != "__name__")
+        return "%s{%s}" % (name, rest)
+
+
+    def main(argv):
+        args = argv[1:]
+        raw = False
+        if "--json" in args:
+            raw = True
+            args.remove("--json")
+        if not args:
+            print(__doc__)
+            return 2
+        expr = args[0]
+        rest = args[1:]
+        params = {"query": expr}
+        path = "/api/v1/query"
+        if rest[:1] == ["--now"]:
+            pass
+        elif rest[:1] == ["--time"]:
+            params["time"] = rest[1]
+        elif rest[:1] == ["--range"]:
+            path = "/api/v1/query_range"
+            params["start"], params["end"], params["step"] = rest[1], rest[2], rest[3]
+        elif not rest:
+            params["time"] = DEFAULT_TIME
+        else:
+            print("unknown option: " + rest[0])
+            return 2
+        url = BASE + path + "?" + urllib.parse.urlencode(params)
+        try:
+            body = urllib.request.urlopen(url, timeout=20).read().decode()
+        except urllib.error.HTTPError as error:
+            body = error.read().decode()
+        answer = json.loads(body)
+        if raw:
+            print(json.dumps(answer))
+            return 0 if answer.get("status") == "success" else 1
+        if answer.get("status") != "success":
+            print("error %s: %s" % (answer.get("errorType"), answer.get("error")))
+            return 1
+        data = answer["data"]
+        kind = data["resultType"]
+        result = data["result"]
+        if kind == "scalar":
+            print("scalar " + result[1])
+        elif kind == "string":
+            print("string " + result[1])
+        elif kind == "vector":
+            lines = sorted("%s %s" % (labels(s["metric"]), s["value"][1]) for s in result)
+            print("\n".join(lines) if lines else "(empty result)")
+        else:
+            if not result:
+                print("(empty result)")
+            for s in sorted(result, key=lambda s: labels(s["metric"])):
+                print(labels(s["metric"]))
+                for t, v in s["values"]:
+                    print("  %s %s" % (t, v))
+        return 0
+
+
+    if __name__ == "__main__":
+        sys.exit(main(sys.argv))
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-config
+  namespace: starfleet
+data:
+  prometheus.yml: |
+    global:
+      evaluation_interval: 15s
+    scrape_configs: []
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prometheus
+  namespace: starfleet
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: prometheus
+  template:
+    metadata:
+      labels:
+        app: prometheus
+    spec:
+      securityContext:
+        runAsUser: 65534
+        runAsGroup: 65534
+        fsGroup: 65534
+      initContainers:
+        - name: generate
+          image: docker.io/library/python:3.13-alpine
+          command: ["python", "/code/gen_dataset.py", "/work/seed.om"]
+          volumeMounts:
+            - name: code
+              mountPath: /code
+            - name: work
+              mountPath: /work
+        - name: backfill
+          image: quay.io/prometheus/prometheus:v3.5.5
+          command: ["/bin/promtool", "tsdb", "create-blocks-from", "openmetrics", "/work/seed.om", "/prometheus"]
+          volumeMounts:
+            - name: work
+              mountPath: /work
+            - name: data
+              mountPath: /prometheus
+      containers:
+        - name: prometheus
+          image: quay.io/prometheus/prometheus:v3.5.5
+          args:
+            - --config.file=/etc/prometheus/prometheus.yml
+            - --storage.tsdb.path=/prometheus
+            - --storage.tsdb.retention.time=10y
+            - --web.listen-address=:9090
+          ports:
+            - containerPort: 9090
+          readinessProbe:
+            httpGet:
+              path: /-/ready
+              port: 9090
+            periodSeconds: 3
+          volumeMounts:
+            - name: config
+              mountPath: /etc/prometheus
+            - name: data
+              mountPath: /prometheus
+      volumes:
+        - name: code
+          configMap:
+            name: dataset-code
+        - name: config
+          configMap:
+            name: prometheus-config
+        - name: work
+          emptyDir: {}
+        - name: data
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: prometheus
+  namespace: starfleet
+spec:
+  selector:
+    app: prometheus
+  ports:
+    - port: 9090
+      targetPort: 9090
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: shuttle
+  namespace: starfleet
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: shuttle
+  template:
+    metadata:
+      labels:
+        app: shuttle
+    spec:
+      containers:
+        - name: shuttle
+          image: docker.io/library/python:3.13-alpine
+          command: ["sleep", "86400"]
+          volumeMounts:
+            - name: tools
+              mountPath: /tools
+      volumes:
+        - name: tools
+          configMap:
+            name: tools

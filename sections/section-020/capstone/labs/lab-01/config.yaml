@@ -1,0 +1,69 @@
+# yaml-language-server: $schema=https://cli.astrona.io/schema/lab-config.schema.json
+#
+# Rates and Derivatives Capstone (LAB). Graded against the live Prometheus server. UNTESTED: built
+# without a live run.
+apiVersion: astrona.io/v1
+metadata:
+  name: ats-049-capstone-020
+  docs:
+    prerequisites: prerequisites.md
+    question: question.md
+    solution: solution.md
+
+runtime:
+  type: kind
+  kind:
+    image: kindest/node:v1.35.8
+    preloadImages:
+      - quay.io/prometheus/prometheus:v3.5.5
+      - docker.io/library/python:3.13-alpine
+
+bootstrap:
+  manifests:
+    - name: lab-start
+      type: file
+      source: manifests/lab-start.yaml
+  waitFor:
+    - resource: deploy/prometheus
+      namespace: starfleet
+    - resource: deploy/shuttle
+      namespace: starfleet
+
+# Applied only by `astrona test`: the reference solution (writes the answers).
+testing:
+  init:
+    - name: apply-solution
+      description: Write the reference answers
+      type: file
+      source: solution/apply.sh
+
+validation:
+  scripts:
+    - name: disk-hours-to-full
+      description: "q1 returns the hours until each disk is full, from the slope of the last 15 minutes"
+      type: file
+      source: validation/validate-disk-hours-to-full.sh
+      hint: "(disk_total_bytes - disk_used_bytes) / deriv(disk_used_bytes[15m]) gives seconds. Divide by 3600. Test with --time 1767228600."
+    - name: bridge-rate-across-restart
+      description: "q2 returns the request rate per bridge instance across the restart, rate taken before the sum"
+      type: file
+      source: validation/validate-bridge-rate-across-restart.sh
+      hint: "sum by (instance) of rate() with a 5m range, evaluated at 1767227550. No subquery."
+    - name: restarts-per-instance
+      description: "q3 returns the number of counter resets in the last hour per instance"
+      type: file
+      source: validation/validate-restarts-per-instance.sh
+      hint: "Take resets() of every http_requests_total series over 1h, then sum by (instance)."
+    - name: shuttle-queue-growth-per-minute
+      description: "q4 returns the growth of the shuttle queue in items per minute"
+      type: file
+      source: validation/validate-shuttle-queue-growth-per-minute.sh
+      hint: "deriv() returns per second. Multiply by 60. Use a 5m range on the shuttle queue_depth series."
+    - name: hourly-error-share
+      description: "q5 returns the share of 500 responses in all responses over the last hour"
+      type: file
+      source: validation/validate-hourly-error-share.sh
+      hint: "Divide sum(increase(...{status=\"500\"}[1h])) by sum(increase(...[1h])). The hour holds the restart, so increase() is needed."
+
+teardown:
+  keepCluster: false

@@ -1,89 +1,100 @@
----
-draft: true
-exam_objectives:
-- Selecting Data
----
-# Select One Population At An Evaluation Time Solution
+# Solution
 
-Use a host shell with the private kubeconfig for this independent kind environment. A kubeconfig identifies the cluster and credentials used by kubectl, the Kubernetes command-line tool.
+Solve this lab on `terminal`. Test each expression with the helper, store it in `answers.yaml`, apply the file and run `astrona submit` to see which checks pass. Start the lab if it is not running:
 
 ```sh
-export KUBECONFIG="$(astrona kubeconfig ats-049-lab-010-01-01)"
-test "$(kubectl config current-context)" = "kind-astro-ats-049-lab-010-01-01" || exit 1
-node_name="astro-ats-049-lab-010-01-01-control-plane"
-worker_name="astro-ats-049-lab-010-01-01-worker"
+astrona run --git ssh://git@github.com/astrona-io/ATS049.git -c sections/section-010/module-01/labs/lab-01
 ```
 
-Keep this connection selected. Host-level commands name only this environment's node containers. They do not operate on the host operating system.
+Right after the start, no check passes, because every key in the ConfigMap `answers` is empty.
 
-## Inspect And Explain
+## Step 1: Question 1
 
-One instrumented probe serves metrics and structured request logs. A traffic generator makes ten percent of requests fail. Prometheus scrapes every two seconds; no evidence report or learner rule exists.
+One selector with `=~` and the alternation `bridge|shuttle` selects the three series of the two jobs. The result has three lines: `bridge-0`, `bridge-1` and `shuttle-0`.
 
-Inspect the current objects before changing them:
+Test the expression:
 
 ```sh
-kubectl -n starfleet get pods -o wide
-kubectl get nodes -o wide
+kubectl -n starfleet exec deploy/shuttle -- python /tools/pq.py 'up{job=~"bridge|shuttle"}'
 ```
 
-Filter the success population and preserve the evaluation time. Compare instant selection with a range selector without treating their result types as interchangeable.
+Put it into `answers.yaml` as the value of `q1`:
 
-Use the expression `lab_requests_total{service="probe",status="200"}`. The report needs `expression`, `evaluated_at` and `data`. Data is the Prometheus API data object, not only the printed value. Wait for at least twenty seconds of collected traffic before using a rate. Record evidence within five minutes of submission. Changing the expression or claiming an empty result fails.
-
-Record observations in `starfleet/evidence`, whose `report.json` contains the stated report. The verifier reads the live API again; invented values do not pass.
-
-
-Save this as `record.py`:
-
-```python
-import json,subprocess,time,sys,tempfile,os
-
-def call(*args):
- r=subprocess.run(list(args),text=True,capture_output=True,timeout=20)
- assert r.returncode==0, 'Observation command failed: '+args[0]
- return r.stdout.strip()
-def obj(kind,name,ns='starfleet'):
- return json.loads(call('kubectl',*(['-n',ns] if ns else []),'get',kind,name,'-o','json'))
-def api(path):
- script='import urllib.request; print(urllib.request.urlopen('+repr('http://prometheus:9090'+path)+',timeout=8).read().decode())'
- return json.loads(call('kubectl','-n','starfleet','exec','shuttle','--','python','-c',script))
-def save(data):
- resource={'apiVersion':'v1','kind':'ConfigMap','metadata':{'name':'evidence','namespace':'starfleet'},'data':{'report.json':json.dumps(data,sort_keys=True)}}
- with tempfile.NamedTemporaryFile(mode='w',suffix='.json',delete=False) as f:json.dump(resource,f);path=f.name
- try:call('kubectl','apply','-f',path)
- finally:os.unlink(path)
-
-assert call('kubectl','config','current-context') == 'kind-astro-ats-049-lab-010-01-01'
-import urllib.parse
-stamp=time.time()
-expression='lab_requests_total{service="probe",status="200"}'
-answer=api('/api/v1/query?'+urllib.parse.urlencode({'query':expression,'time':stamp}))
-assert answer['status']=='success' and answer['data']['result'], 'Wait for enough scrapes'
-report={'expression':expression,'evaluated_at':stamp,'data':answer['data']}
-save(report)
+```yaml
+  q1: 'up{job=~"bridge|shuttle"}'
 ```
 
-Apply the scoped correction:
+## Step 2: Question 2
+
+Two matchers in one selector are an AND. `status="500"` keeps the failing requests and `instance!="shuttle-0:8080"` removes the `shuttle` series. Four series remain, two for each `bridge` instance.
+
+Test the expression:
 
 ```sh
-python3 record.py
+kubectl -n starfleet exec deploy/shuttle -- python /tools/pq.py 'http_requests_total{status="500", instance!="shuttle-0:8080"}'
 ```
 
-## Verify The Result
+Put it into `answers.yaml` as the value of `q2`:
 
-Observe the actual result. A denied request returns a nonzero status when the denial works, so run it separately from a shell sequence that stops on error. Status convergence and a successful request establish different parts of the result.
+```yaml
+  q2: 'http_requests_total{status="500", instance!="shuttle-0:8080"}'
+```
+
+## Step 3: Question 3
+
+A selector in braces without a metric name needs a matcher on `__name__`. The pattern `disk_.*` must match the whole name, so it needs the trailing `.*`. At the evaluation time two series have a recent sample, one for each of `disk_used_bytes` and `disk_total_bytes` of `probe-0`.
+
+Test the expression:
 
 ```sh
-kubectl -n starfleet get configmaps
-kubectl -n starfleet get deployment probe -o yaml
+kubectl -n starfleet exec deploy/shuttle -- python /tools/pq.py '{__name__=~"disk_.*"}'
 ```
 
-Evaluate the required expression and preserve its labels, values and evaluation time. The commands above deliberately target one environment. Keep its remaining components available so an unrelated failure cannot stand in for the required denial or correction. No example command output is presented as evidence of a completed run. A matching field alone does not establish that a process used it or that a controller reconciled it.
+Put it into `answers.yaml` as the value of `q3`:
 
-After recording your result, remove the independent lab with `astrona destroy ats-049-lab-010-01-01`.
+```yaml
+  q3: '{__name__=~"disk_.*"}'
+```
 
-## Common pitfalls
+## Step 4: Question 4
 
-> [!WARNING]
-> Confirm the private context and exact node names before a change. Check the stated scope and live result. Do not change unrelated components to hide the original fault.
+`count by (job)` returns one element for each value of `job`. The expected counts are 8 for `bridge` and 2 for `shuttle`.
+
+Test the expression:
+
+```sh
+kubectl -n starfleet exec deploy/shuttle -- python /tools/pq.py 'count by (job) (http_requests_total)'
+```
+
+Put it into `answers.yaml` as the value of `q4`:
+
+```yaml
+  q4: 'count by (job) (http_requests_total)'
+```
+
+## Step 5: Question 5
+
+A duration in square brackets turns the selector into a range vector. The window is left-open, so with 15 second samples the series has two samples inside `[30s]`.
+
+Test the expression:
+
+```sh
+kubectl -n starfleet exec deploy/shuttle -- python /tools/pq.py 'http_requests_total{job="shuttle", status="200"}[30s]'
+```
+
+Put it into `answers.yaml` as the value of `q5`:
+
+```yaml
+  q5: 'http_requests_total{job="shuttle", status="200"}[30s]'
+```
+
+## Apply and submit
+
+Apply the file and submit:
+
+```sh
+kubectl apply -f answers.yaml
+astrona submit --git ssh://git@github.com/astrona-io/ATS049.git -c sections/section-010/module-01/labs/lab-01
+```
+
+Every check should pass. Other expressions that return the same series and values also pass, unless the question requires a technique.

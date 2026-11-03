@@ -1,0 +1,255 @@
+# Knowledge check for section 070. Listed in astrona.yaml as a `type: quiz` entry after the capstone lab.
+schema_version: 1
+kind: question_bank
+id: ats049-070
+course_id: ATS049
+exam_code: PCA
+status: draft
+provenance: Original practice material written for this course; not official exam questions.
+scope:
+  type: section
+  id: section-070
+  title: "Timestamp Metrics"
+placement:
+  position: after
+  reading: sections/section-070/capstone/labs/lab-01/question.md
+questions:
+  - id: ats049-070-q01
+    type: single_choice
+    difficulty: beginner
+    learning_objective: "Explain what time() returns and why it is the evaluation time"
+    source_readings:
+      - sections/section-070/module-01/course-01-time-versus-timestamp.md
+    prompt: "The query `time()` is evaluated with the evaluation time set to Unix time 1767225600. What does it return?"
+    options:
+      - id: a
+        text: "The current Unix time of the server, because `time()` reads the clock."
+        explanation: "This option is not correct. `time()` does not read the clock when an evaluation time is given. It returns the evaluation time."
+      - id: b
+        text: "The scalar 1767225600, because `time()` returns the time at which the expression is evaluated."
+        explanation: "Correct. `time()` returns the number of seconds since 1970-01-01 UTC at which the expression is evaluated. With a chosen evaluation time it returns that time."
+      - id: c
+        text: "The time of the newest stored sample, 1767229200."
+        explanation: "This option is not correct. 1767229200 is the default evaluation time of the helper, not the evaluation time set in this query."
+    correct_option: b
+    explanation: "`time()` returns the number of seconds since 1970-01-01 UTC at which the expression is evaluated. With a chosen evaluation time it returns that time."
+
+  - id: ats049-070-q02
+    type: single_choice
+    difficulty: beginner
+    learning_objective: "Explain what timestamp(v) returns and how it differs from a timestamp-valued metric"
+    source_readings:
+      - sections/section-070/module-01/course-01-time-versus-timestamp.md
+    prompt: "Which statement about `timestamp(process_start_time_seconds)` is correct?"
+    options:
+      - id: a
+        text: "It returns the start time of each process, because that is the value of the metric."
+        explanation: "This option is not correct. The start time is the value of the metric. `timestamp()` does not return values."
+      - id: b
+        text: "It returns the evaluation time for every series."
+        explanation: "This option is not correct. It returns the stored time of each sample. That equals the evaluation time only when a sample is exactly at the evaluation time."
+      - id: c
+        text: "It returns the time at which Prometheus stored the sample that the selector returns, not the start time."
+        explanation: "Correct. `timestamp(v)` returns the stored time of each sample. The process start time is the value of the metric, so it needs no function."
+    correct_option: c
+    explanation: "`timestamp(v)` returns the stored time of each sample. The process start time is the value of the metric, so it needs no function."
+
+  - id: ats049-070-q03
+    type: single_choice
+    difficulty: beginner
+    learning_objective: "Compute the uptime of a process as time() minus process_start_time_seconds"
+    source_readings:
+      - sections/section-070/module-01/course-02-age-of-an-event.md
+    prompt: "Which expression returns the uptime of every process in seconds?"
+    options:
+      - id: a
+        text: "`time() - process_start_time_seconds`"
+        explanation: "Correct. The start time is a Unix time in the past. Subtracting it from the evaluation time gives the number of seconds since the process started."
+      - id: b
+        text: "`process_start_time_seconds - time()`"
+        explanation: "This option is not correct. This gives a negative number, because the start time is in the past."
+      - id: c
+        text: "`timestamp(process_start_time_seconds)`"
+        explanation: "This option is not correct. This is the time of the stored sample, not the start of the process."
+    correct_option: a
+    explanation: "The start time is a Unix time in the past. Subtracting it from the evaluation time gives the number of seconds since the process started."
+
+  - id: ats049-070-q04
+    type: single_choice
+    difficulty: intermediate
+    learning_objective: "Compute the age of the last successful backup from a timestamp-valued metric"
+    source_readings:
+      - sections/section-070/module-01/course-02-age-of-an-event.md
+    prompt: "At Unix time 1767229200 the metric `backup_last_success_timestamp_seconds` of `probe-0` has the value 1767226800. What does `time() - backup_last_success_timestamp_seconds` return for it?"
+    options:
+      - id: a
+        text: "1767226800"
+        explanation: "This option is not correct. This is the value of the metric, a point in time, and not the age."
+      - id: b
+        text: "300"
+        explanation: "This option is not correct. 300 is the age of another source in the dataset. For this value the difference is 2400."
+      - id: c
+        text: "2400"
+        explanation: "Correct. 1767229200 minus 1767226800 is 2400 seconds, which is 40 minutes."
+    correct_option: c
+    explanation: "1767229200 minus 1767226800 is 2400 seconds, which is 40 minutes."
+
+  - id: ats049-070-q05
+    type: single_choice
+    difficulty: intermediate
+    learning_objective: "Convert an age from seconds to minutes with correct operator precedence"
+    source_readings:
+      - sections/section-070/module-01/course-03-overdue-work-and-units.md
+    prompt: "The expression `time() - backup_last_success_timestamp_seconds / 60` returns very large numbers. What is wrong?"
+    options:
+      - id: a
+        text: "Division binds tighter than subtraction, so it divides the backup time, and the age needs parentheses around the subtraction."
+        explanation: "Correct. Division has a higher precedence than subtraction. Write `(time() - backup_last_success_timestamp_seconds) / 60`."
+      - id: b
+        text: "`time()` cannot be used with a division."
+        explanation: "This option is not correct. `time()` can be used in any arithmetic. The problem is the operator precedence."
+      - id: c
+        text: "The age must be divided by 60 before the metric is read."
+        explanation: "This option is not correct. The metric holds a Unix time, and the division must apply to the age, which exists only after the subtraction."
+    correct_option: a
+    explanation: "Division has a higher precedence than subtraction. Write `(time() - backup_last_success_timestamp_seconds) / 60`."
+
+  - id: ats049-070-q06
+    type: single_choice
+    difficulty: intermediate
+    learning_objective: "Write an overdue-work expression with a threshold comparison"
+    source_readings:
+      - sections/section-070/module-01/course-03-overdue-work-and-units.md
+    prompt: "Which expression returns only the backup sources that are older than 15 minutes, with the age in seconds as the value?"
+    options:
+      - id: a
+        text: "`time() - backup_last_success_timestamp_seconds > bool 900`"
+        explanation: "This option is not correct. With `bool` every source is returned with the value 1 or 0, and the age is lost."
+      - id: b
+        text: "`time() - backup_last_success_timestamp_seconds > 900`"
+        explanation: "Correct. Without `bool`, a comparison between a vector and a scalar is a filter that keeps the series that satisfy it, with their value. 15 minutes are 900 seconds."
+      - id: c
+        text: "`time() - backup_last_success_timestamp_seconds > 15m`"
+        explanation: "This option is not correct. A duration literal is not a number in a comparison."
+    correct_option: b
+    explanation: "Without `bool`, a comparison between a vector and a scalar is a filter that keeps the series that satisfy it, with their value. 15 minutes are 900 seconds."
+
+  - id: ats049-070-q07
+    type: single_choice
+    difficulty: beginner
+    learning_objective: "Explain the difference between up equal to 0 and a missing up series"
+    source_readings:
+      - sections/section-070/module-02/course-01-up-and-missing-series.md
+    prompt: "A target is removed from Prometheus and no longer scraped. What happens to the expression `up == 0` for it?"
+    options:
+      - id: a
+        text: "It returns nothing for that target, because no `up` series exists for it any more after the lookback window."
+        explanation: "Correct. `up` is written for every scrape. A target that is no longer scraped has no new samples, so the comparison has nothing to match, and an absence test is needed."
+      - id: b
+        text: "It returns the target with the value 0."
+        explanation: "This option is not correct. A removed target produces no new `up` samples, so there is no 0 to return."
+      - id: c
+        text: "It returns the target with the value 1."
+        explanation: "This option is not correct. A series that no longer exists is not returned with any value."
+    correct_option: a
+    explanation: "`up` is written for every scrape. A target that is no longer scraped has no new samples, so the comparison has nothing to match, and an absence test is needed."
+
+  - id: ats049-070-q08
+    type: single_choice
+    difficulty: intermediate
+    learning_objective: "Explain why a filter that matches nothing returns an empty result and not 0"
+    source_readings:
+      - sections/section-070/module-02/course-01-up-and-missing-series.md
+    prompt: "No target is failing. What does `count(up == 0)` return?"
+    options:
+      - id: a
+        text: "The value 0."
+        explanation: "This option is not correct. `count()` of an empty vector is an empty vector. Add `or vector(0)` to get 0."
+      - id: b
+        text: "An error, because the vector is empty."
+        explanation: "This option is not correct. An empty vector is not an error."
+      - id: c
+        text: "An empty result, because the filter returns no series and `count()` of nothing is nothing."
+        explanation: "Correct. The filter returns an empty vector, and `count()` of an empty vector is empty. Use `count(up == 0) or vector(0)` when a number is required."
+    correct_option: c
+    explanation: "The filter returns an empty vector, and `count()` of an empty vector is empty. Use `count(up == 0) or vector(0)` when a number is required."
+
+  - id: ats049-070-q09
+    type: single_choice
+    difficulty: intermediate
+    learning_objective: "Predict the labels of the series returned by absent()"
+    source_readings:
+      - sections/section-070/module-02/course-02-absent-and-absent-over-time.md
+    prompt: "The series of `probe-1` does not exist. Which result does `absent(up{job=\"probe\", instance=~\"probe-1.*\"})` return?"
+    options:
+      - id: a
+        text: "`{instance=\"probe-1:9100\", job=\"probe\"} 1`"
+        explanation: "This option is not correct. The instance label cannot be derived from a regular expression matcher."
+      - id: b
+        text: "`{job=\"probe\"} 1`"
+        explanation: "Correct. Only equality matchers become labels of the result. The regular expression matcher on `instance` adds none, and the metric name is never added."
+      - id: c
+        text: "`up{job=\"probe\"} 1`"
+        explanation: "This option is not correct. `absent()` never adds the metric name to the result."
+    correct_option: b
+    explanation: "Only equality matchers become labels of the result. The regular expression matcher on `instance` adds none, and the metric name is never added."
+
+  - id: ats049-070-q10
+    type: single_choice
+    difficulty: advanced
+    learning_objective: "Explain how the left-open range decides absent_over_time()"
+    source_readings:
+      - sections/section-070/module-02/course-02-absent-and-absent-over-time.md
+    prompt: "At Unix time 1767229200 the newest sample of `probe-1` is at 1767228600. What does `absent_over_time(up{instance=\"probe-1:9100\"}[10m])` return?"
+    options:
+      - id: a
+        text: "An empty result, because the sample is within the last 10 minutes."
+        explanation: "This option is not correct. The sample is exactly 10 minutes old, and a range selector is open at its left edge, so it is excluded."
+      - id: b
+        text: "An error, because `[10m]` is longer than the lookback window."
+        explanation: "This option is not correct. A range of any length is allowed."
+      - id: c
+        text: "One element with the label `instance` and the value 1, because the sample at exactly 10 minutes before is not in the range."
+        explanation: "Correct. In Prometheus 3 a range selector excludes a sample at exactly the evaluation time minus the range. The range holds no sample, so the function returns 1."
+    correct_option: c
+    explanation: "In Prometheus 3 a range selector excludes a sample at exactly the evaluation time minus the range. The range holds no sample, so the function returns 1."
+
+  - id: ats049-070-q11
+    type: single_choice
+    difficulty: advanced
+    learning_objective: "Detect restarts with changes() on a start time and choose a range that covers the event"
+    source_readings:
+      - sections/section-070/module-02/course-03-restarts-stale-series-and-gaps.md
+    prompt: "`bridge-1` restarted at 1767227400, and its first sample with the new start time is at that time. Evaluated at 1767229200, `changes(process_start_time_seconds[30m])` reports 0 for it. Why?"
+    options:
+      - id: a
+        text: "`changes()` only counts changes of counters."
+        explanation: "This option is not correct. `changes()` counts any change of value, also in a gauge."
+      - id: b
+        text: "The range excludes the sample at exactly 1767227400, so the old and new values are not both inside it."
+        explanation: "Correct. The range covers the times after 1767227400, and the sample with the old value is before it. A range that reaches back further, such as 31 minutes, counts the change."
+      - id: c
+        text: "The start time does not change when a process restarts."
+        explanation: "This option is not correct. The start time moves to the new start when the process restarts."
+    correct_option: b
+    explanation: "The range covers the times after 1767227400, and the sample with the old value is before it. A range that reaches back further, such as 31 minutes, counts the change."
+
+  - id: ats049-070-q12
+    type: single_choice
+    difficulty: advanced
+    learning_objective: "Find stale series with time() minus timestamp()"
+    source_readings:
+      - sections/section-070/module-02/course-03-restarts-stale-series-and-gaps.md
+    prompt: "A series stopped receiving samples 4 minutes ago. It still appears in `up`, and its value is 1. Which expression shows how old its newest sample is?"
+    options:
+      - id: a
+        text: "`time() - timestamp(up)`"
+        explanation: "Correct. `timestamp(up)` is the stored time of the newest sample. Subtracting it from `time()` gives its age, which is about 240 seconds here."
+      - id: b
+        text: "`up == 0`"
+        explanation: "This option is not correct. The value is still 1, so this filter does not match."
+      - id: c
+        text: "`absent(up)`"
+        explanation: "This option is not correct. The series is still inside the lookback window, so `absent()` returns nothing."
+    correct_option: a
+    explanation: "`timestamp(up)` is the stored time of the newest sample. Subtracting it from `time()` gives its age, which is about 240 seconds here."

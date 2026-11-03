@@ -1,0 +1,255 @@
+# Knowledge check for section 060. Listed in astrona.yaml as a `type: quiz` entry after the capstone lab.
+schema_version: 1
+kind: question_bank
+id: ats049-060
+course_id: ATS049
+exam_code: PCA
+status: draft
+provenance: Original practice material written for this course; not official exam questions.
+scope:
+  type: section
+  id: section-060
+  title: "Histograms"
+placement:
+  position: after
+  reading: sections/section-060/capstone/labs/lab-01/question.md
+questions:
+  - id: ats049-060-q01
+    type: single_choice
+    difficulty: beginner
+    learning_objective: "Describe the series that one classic histogram creates and explain why bucket values are cumulative"
+    source_readings:
+      - sections/section-060/module-01/course-01-what-a-classic-histogram-exposes.md
+    prompt: "A classic histogram `http_request_duration_seconds` for one instance has the bucket `le=\"0.25\"` with value 40800 and the bucket `le=\"0.5\"` with value 45600. How many observations took more than 0.25 seconds and at most 0.5 seconds?"
+    options:
+      - id: a
+        text: "45600"
+        explanation: "This is the count of all observations at or under 0.5 seconds, not the range."
+      - id: b
+        text: "4800"
+        explanation: "Correct. Buckets are cumulative, so the observations between two bounds are the difference of the two neighbouring buckets."
+      - id: c
+        text: "40800"
+        explanation: "This is the count of all observations at or under 0.25 seconds."
+    correct_option: b
+    explanation: "Buckets are cumulative, so the observations between two bounds are the difference of the two neighbouring buckets."
+
+  - id: ats049-060-q02
+    type: single_choice
+    difficulty: beginner
+    learning_objective: "Describe the series that one classic histogram creates and explain why bucket values are cumulative"
+    source_readings:
+      - sections/section-060/module-01/course-01-what-a-classic-histogram-exposes.md
+    prompt: "Which series has the same value as the bucket with `le=\"+Inf\"` of a classic histogram?"
+    options:
+      - id: a
+        text: "`http_request_duration_seconds_sum`"
+        explanation: "The sum holds seconds of duration, not a number of observations."
+      - id: b
+        text: "The bucket with the highest finite bound"
+        explanation: "This bucket can be smaller, because slower observations only appear in `+Inf`."
+      - id: c
+        text: "`http_request_duration_seconds_count`"
+        explanation: "Correct. Every observation is counted in the `+Inf` bucket, so its value equals the count."
+    correct_option: c
+    explanation: "Every observation is counted in the `+Inf` bucket, so its value equals the count."
+
+  - id: ats049-060-q03
+    type: single_choice
+    difficulty: intermediate
+    learning_objective: "Write histogram_quantile(0.9, sum by (le) (rate(...[5m]))) and say why each part is needed"
+    source_readings:
+      - sections/section-060/module-01/course-02-rate-over-buckets-and-histogram-quantile.md
+    prompt: "Which expression estimates the 0.9 quantile of the request duration for the whole service over the last 5 minutes?"
+    options:
+      - id: a
+        text: "`histogram_quantile(0.9, http_request_duration_seconds_bucket)`"
+        explanation: "Without `rate` the raw counters describe the whole lifetime of each process."
+      - id: b
+        text: "`histogram_quantile(0.9, sum by (le) (rate(http_request_duration_seconds_bucket[5m])))`"
+        explanation: "Correct. `rate` gives the window, `sum by (le)` adds the instances and keeps the bucket bounds, and the function then estimates the quantile."
+      - id: c
+        text: "`histogram_quantile(0.9, sum(rate(http_request_duration_seconds_bucket[5m])))`"
+        explanation: "`sum` without `by (le)` removes the bucket bounds, so the function ignores the input and the result is empty."
+    correct_option: b
+    explanation: "`rate` gives the window, `sum by (le)` adds the instances and keeps the bucket bounds, and the function then estimates the quantile."
+
+  - id: ats049-060-q04
+    type: single_choice
+    difficulty: intermediate
+    learning_objective: "Write histogram_quantile(0.9, sum by (le) (rate(...[5m]))) and say why each part is needed"
+    source_readings:
+      - sections/section-060/module-01/course-02-rate-over-buckets-and-histogram-quantile.md
+    prompt: "The query `histogram_quantile(0.9, sum by (instance) (rate(http_request_duration_seconds_bucket[5m])))` is accepted but returns an empty result. What is the cause?"
+    options:
+      - id: a
+        text: "`sum by (instance)` removes the `le` label, and series without `le` are ignored."
+        explanation: "Correct. The function needs the bucket bounds in the label `le`, and the aggregation did not keep it."
+      - id: b
+        text: "Prometheus has no data for the histogram."
+        explanation: "The series exist. The aggregation removes the label the function needs."
+      - id: c
+        text: "`rate` cannot be applied to bucket series."
+        explanation: "`rate` works on every bucket counter."
+    correct_option: a
+    explanation: "The function needs the bucket bounds in the label `le`, and the aggregation did not keep it."
+
+  - id: ats049-060-q05
+    type: single_choice
+    difficulty: intermediate
+    learning_objective: "Estimate by hand the value that linear interpolation returns, and say how wide the possible error is"
+    source_readings:
+      - sections/section-060/module-01/course-02-rate-over-buckets-and-histogram-quantile.md
+    prompt: "For one instance the cumulative bucket counts per 15 seconds are 170 for `le=\"0.25\"`, 190 for `le=\"0.5\"` and 200 for `le=\"+Inf\"`. What does `histogram_quantile(0.9, ...)` return?"
+    options:
+      - id: a
+        text: "0.5"
+        explanation: "This is the upper bound of the bucket. The rank 180 is halfway through the bucket, not at its end."
+      - id: b
+        text: "0.375"
+        explanation: "Correct. The rank is 0.9 times 200, which is 180. It lies 10 of 20 observations into the bucket from 0.25 to 0.5, so the result is 0.25 plus half of 0.25."
+      - id: c
+        text: "0.25"
+        explanation: "This is the lower bound of the bucket. The rank is above the count 170."
+    correct_option: b
+    explanation: "The rank is 0.9 times 200, which is 180. It lies 10 of 20 observations into the bucket from 0.25 to 0.5, so the result is 0.25 plus half of 0.25."
+
+  - id: ats049-060-q06
+    type: single_choice
+    difficulty: intermediate
+    learning_objective: "Estimate by hand the value that linear interpolation returns, and say how wide the possible error is"
+    source_readings:
+      - sections/section-060/module-01/course-02-rate-over-buckets-and-histogram-quantile.md
+    prompt: "What does `histogram_quantile` return when the requested quantile falls into the `+Inf` bucket?"
+    options:
+      - id: a
+        text: "`+Inf`"
+        explanation: "The function cannot interpolate towards infinity and returns a finite bound instead."
+      - id: b
+        text: "`NaN`"
+        explanation: "`NaN` is returned for an empty histogram or when the highest bucket is not `+Inf`."
+      - id: c
+        text: "The upper bound of the highest finite bucket."
+        explanation: "Correct. The result is a limit, not an exact value. Add a larger bucket to see more."
+    correct_option: c
+    explanation: "The result is a limit, not an exact value. Add a larger bucket to see more."
+
+  - id: ats049-060-q07
+    type: single_choice
+    difficulty: intermediate
+    learning_objective: "Explain why averaging quantiles from different instances gives a wrong answer and aggregate buckets instead"
+    source_readings:
+      - sections/section-060/module-01/course-03-aggregating-buckets-across-instances.md
+    prompt: "Two instances report a 0.9 quantile of 0.3 and 0.5 seconds. The first serves 900 requests per minute and the second serves 100. Why is 0.4 not the 0.9 quantile of the service?"
+    options:
+      - id: a
+        text: "The mean of two quantiles ignores how many requests each instance served, so the quantile of the combined buckets must be calculated."
+        explanation: "Correct. A quantile is not a sum. Add the bucket rates of the instances and compute the quantile once."
+      - id: b
+        text: "A quantile can only be taken from one instance at a time."
+        explanation: "Buckets of several instances can be added, and the quantile can be taken from the sum."
+      - id: c
+        text: "0.4 is correct, because the quantiles are linear."
+        explanation: "Quantiles are not linear and cannot be averaged."
+    correct_option: a
+    explanation: "A quantile is not a sum. Add the bucket rates of the instances and compute the quantile once."
+
+  - id: ats049-060-q08
+    type: single_choice
+    difficulty: advanced
+    learning_objective: "Explain what a counter reset does to raw bucket values and why rate still gives a correct quantile"
+    source_readings:
+      - sections/section-060/module-01/course-03-aggregating-buckets-across-instances.md
+    prompt: "One instance restarts inside a 5-minute window and all its bucket counters drop to 0. Why does a quantile from `rate` of the buckets still work?"
+    options:
+      - id: a
+        text: "`rate` ignores the samples around the restart completely."
+        explanation: "`rate` uses the samples. It does not skip them."
+      - id: b
+        text: "Prometheus restores the old counter values after the restart."
+        explanation: "Prometheus does not restore values. The counters really start at 0."
+      - id: c
+        text: "`rate` treats a drop of a counter as a reset and counts the new value from 0, so the buckets keep their proportions."
+        explanation: "Correct. Every bucket loses the same share of one step, so the ratios between buckets and the quantile stay close."
+    correct_option: c
+    explanation: "Every bucket loses the same share of one step, so the ratios between buckets and the quantile stay close."
+
+  - id: ats049-060-q09
+    type: single_choice
+    difficulty: beginner
+    learning_objective: "Compute the mean duration with rate(_sum) / rate(_count) per instance and for all instances together"
+    source_readings:
+      - sections/section-060/module-02/course-01-mean-duration-from-sum-and-count.md
+    prompt: "Which expression gives the mean request duration of the whole service over 5 minutes, weighted by requests?"
+    options:
+      - id: a
+        text: "`sum(rate(http_request_duration_seconds_sum[5m])) / sum(rate(http_request_duration_seconds_count[5m]))`"
+        explanation: "Correct. Summed seconds divided by summed requests weights each instance by its requests."
+      - id: b
+        text: "`avg(rate(http_request_duration_seconds_sum[5m]) / rate(http_request_duration_seconds_count[5m]))`"
+        explanation: "This averages the instance means and gives every instance the same weight."
+      - id: c
+        text: "`sum(http_request_duration_seconds_sum) / sum(http_request_duration_seconds_count)`"
+        explanation: "Without `rate` the result is the mean since the processes started."
+    correct_option: a
+    explanation: "Summed seconds divided by summed requests weights each instance by its requests."
+
+  - id: ats049-060-q10
+    type: single_choice
+    difficulty: intermediate
+    learning_objective: "Use ignoring(le) to divide a bucket series by a series without le"
+    source_readings:
+      - sections/section-060/module-02/course-02-share-of-requests-under-a-threshold.md
+    prompt: "The query `http_request_duration_seconds_bucket{le=\"0.25\"} / http_request_duration_seconds_count` returns an empty result. What fixes it, so that it returns the share of observations at or under 0.25 seconds per series?"
+    options:
+      - id: a
+        text: "Write `le=0.25` without quotes."
+        explanation: "Label values are strings and must be quoted."
+      - id: b
+        text: "Use `/ ignoring(le)` between the two selectors."
+        explanation: "Correct. The bucket has the label `le` and the count does not, so the label sets differ and nothing matches until `le` is ignored."
+      - id: c
+        text: "Replace `http_request_duration_seconds_count` with `http_request_duration_seconds_sum`."
+        explanation: "The sum is in seconds and is not a number of observations."
+    correct_option: b
+    explanation: "The bucket has the label `le` and the count does not, so the label sets differ and nothing matches until `le` is ignored."
+
+  - id: ats049-060-q11
+    type: single_choice
+    difficulty: intermediate
+    learning_objective: "Explain why a threshold must be an existing bucket bound"
+    source_readings:
+      - sections/section-060/module-02/course-02-share-of-requests-under-a-threshold.md
+    prompt: "A service level objective needs the share of requests at or under 0.3 seconds, and the buckets are 0.05, 0.1, 0.25, 0.5, 1 and `+Inf`. What happens with the selector `http_request_duration_seconds_bucket{le=\"0.3\"}`?"
+    options:
+      - id: a
+        text: "It matches no series, so the result is empty and no error appears."
+        explanation: "Correct. Only the bounds that the application defined exist. Use an existing bound or add a bucket at 0.3 in the application."
+      - id: b
+        text: "It returns the interpolated bucket for 0.3 seconds."
+        explanation: "PromQL does not interpolate bucket series."
+      - id: c
+        text: "It returns the bucket `le=\"0.5\"`, the next larger bound."
+        explanation: "The selector matches the label value exactly."
+    correct_option: a
+    explanation: "Only the bounds that the application defined exist. Use an existing bound or add a bucket at 0.3 in the application."
+
+  - id: ats049-060-q12
+    type: single_choice
+    difficulty: intermediate
+    learning_objective: "Compare histograms and summaries for aggregation, accuracy and cost, and describe native histograms"
+    source_readings:
+      - sections/section-060/module-02/course-03-histograms-summaries-and-native-histograms.md
+    prompt: "Which statement about summaries, classic histograms and native histograms is correct?"
+    options:
+      - id: a
+        text: "Summary quantiles can be averaged across instances to get the service quantile."
+        explanation: "Quantile values of a summary cannot be combined."
+      - id: b
+        text: "A classic histogram calculates its quantiles in the application."
+        explanation: "The server calculates them at query time with `histogram_quantile`."
+      - id: c
+        text: "Native histograms need no `le` label, so a fleet quantile can use `sum` before `histogram_quantile`."
+        explanation: "Correct. A native histogram sample holds all buckets, and histograms from different instances can be merged."
+    correct_option: c
+    explanation: "A native histogram sample holds all buckets, and histograms from different instances can be merged."

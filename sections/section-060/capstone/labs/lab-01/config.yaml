@@ -1,0 +1,70 @@
+# yaml-language-server: $schema=https://cli.astrona.io/schema/lab-config.schema.json
+#
+# Histograms Capstone (LAB). Graded against the live Prometheus server. UNTESTED: built
+# without a live run.
+apiVersion: astrona.io/v1
+metadata:
+  name: ats-049-capstone-060
+  docs:
+    prerequisites: prerequisites.md
+    question: question.md
+    solution: solution.md
+
+runtime:
+  type: kind
+  kind:
+    image: kindest/node:v1.35.8
+    preloadImages:
+      - quay.io/prometheus/prometheus:v3.5.5
+      - docker.io/library/python:3.13-alpine
+
+bootstrap:
+  manifests:
+    - name: lab-start
+      type: file
+      source: manifests/lab-start.yaml
+  waitFor:
+    - resource: deploy/prometheus
+      namespace: starfleet
+    - resource: deploy/shuttle
+      namespace: starfleet
+
+# Applied only by `astrona test`: the reference solution (writes the answers).
+testing:
+  init:
+    - name: apply-solution
+      description: Write the reference answers
+      type: file
+      source: solution/apply.sh
+
+# One check per task; each reads one key of the ConfigMap answers.
+validation:
+  scripts:
+    - name: q1-p90-per-instance
+      description: "q1 returns the 0.9 quantile per instance"
+      type: file
+      source: validation/validate-q1-p90-per-instance.sh
+      hint: "rate of the buckets, sum by (instance, le), then histogram_quantile."
+    - name: q2-instances-over-limit
+      description: "q2 returns only the instances whose 0.9 quantile is above 0.4 seconds"
+      type: file
+      source: validation/validate-q2-instances-over-limit.sh
+      hint: "Put a comparison with > 0.4 behind the quantile expression. The comparison filters the vector."
+    - name: q3-mean-overall
+      description: "q3 returns the mean duration of the whole service"
+      type: file
+      source: validation/validate-q3-mean-overall.sh
+      hint: "Divide the summed rate of _sum by the summed rate of _count. Do not average instance means."
+    - name: q4-share-under-025
+      description: "q4 returns the share of requests at or under 0.25 seconds for the whole service"
+      type: file
+      source: validation/validate-q4-share-under-025.sh
+      hint: "The bucket le='0.25' divided by the _count rate, both summed over all instances."
+    - name: q5-p90-fleet-across-reset
+      description: "q5 returns the fleet 0.9 quantile in the window that contains the bridge-1 restart"
+      type: file
+      source: validation/validate-q5-p90-fleet-across-reset.sh
+      hint: "Sum the bucket rates over all instances with sum by (le). rate handles the reset. Test with --time 1767227475 and a 5m window."
+
+teardown:
+  keepCluster: false

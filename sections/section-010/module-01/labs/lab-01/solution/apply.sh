@@ -1,12 +1,10 @@
 #!/usr/bin/env bash
+# Reference answers: one expression per question in the ConfigMap `answers`.
 set -euo pipefail
-if [[ "$(kubectl config current-context)" != "kind-astro-ats-049-lab-010-01-01" ]]; then
-  printf 'Refusing to operate on another Kubernetes context\n' >&2
-  exit 1
-fi
-lab_directory="$(cd "$(dirname "$0")/.." && pwd)"
-solution_directory="$lab_directory/solution"
-node_name="astro-ats-049-lab-010-01-01-control-plane"
-worker_name="astro-ats-049-lab-010-01-01-worker"
-
-python3 "$solution_directory/record.py"
+kubectl -n starfleet create configmap answers \
+  --from-literal=q1='up{job=~"bridge|shuttle"}' \
+  --from-literal=q2='http_requests_total{status="500", instance!="shuttle-0:8080"}' \
+  --from-literal=q3='{__name__=~"disk_.*"}' \
+  --from-literal=q4='count by (job) (http_requests_total)' \
+  --from-literal=q5='http_requests_total{job="shuttle", status="200"}[30s]' \
+  --dry-run=client -o yaml | kubectl apply -f -

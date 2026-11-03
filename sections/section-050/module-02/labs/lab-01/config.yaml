@@ -1,0 +1,69 @@
+# yaml-language-server: $schema=https://cli.astrona.io/schema/lab-config.schema.json
+#
+# Vector Matching And Set Operators (LAB). Graded against the live Prometheus server. UNTESTED: built
+# without a live run.
+apiVersion: astrona.io/v1
+metadata:
+  name: ats-049-lab-050-02
+  docs:
+    prerequisites: prerequisites.md
+    question: question.md
+    solution: solution.md
+
+runtime:
+  type: kind
+  kind:
+    image: kindest/node:v1.35.8
+    preloadImages:
+      - quay.io/prometheus/prometheus:v3.5.5
+      - docker.io/library/python:3.13-alpine
+
+bootstrap:
+  manifests:
+    - name: lab-start
+      type: file
+      source: manifests/lab-start.yaml
+  waitFor:
+    - resource: deploy/prometheus
+      namespace: starfleet
+    - resource: deploy/shuttle
+      namespace: starfleet
+
+# Applied only by `astrona test`: the reference solution (writes the answers).
+testing:
+  init:
+    - name: apply-solution
+      description: Write the reference answers
+      type: file
+      source: solution/apply.sh
+
+validation:
+  scripts:
+    - name: q1-total-per-instance-method
+      description: "q1: 200 and 500 counters added per instance and method"
+      type: file
+      source: validation/validate-q1.sh
+      hint: "The two sides differ only in the label status. Use ignoring(status) or on(instance, job, method) after the + operator."
+    - name: q2-version-label
+      description: "q2: queue depth with the version label"
+      type: file
+      source: validation/validate-q2.sh
+      hint: "Match on instance and copy the label with group_left(version) from build_info."
+    - name: q3-team-label
+      description: "q3: 500 counters with the team label"
+      type: file
+      source: validation/validate-q3.sh
+      hint: "Several counters share one team_info series, so the match is many-to-one: use group_left(team)."
+    - name: q4-targets-down
+      description: "q4: queue depth of targets that are down"
+      type: file
+      source: validation/validate-q4.sh
+      hint: "Select the label sets of down targets with up == 0 on the right and keep the matching series with and on(instance)."
+    - name: q5-targets-not-down
+      description: "q5: queue depth of targets that are not down"
+      type: file
+      source: validation/validate-q5.sh
+      hint: "Use unless on(instance) with the same right side as the previous question."
+
+teardown:
+  keepCluster: false

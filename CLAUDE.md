@@ -203,20 +203,20 @@ The course covers **PromQL**, worth **28%** of
 **Prometheus Certified Associate (PCA)**. It is part of **ATP010**.
 The official objectives are listed in `astrona.yaml` and mapped in `CURRICULUM.md`.
 
-### Reading-only scope
+### Playground and graded lab scope
 
-The maintainer approved the lesson plan, asked for deeper teaching, and explicitly
-requested **no labs or playgrounds**. That instruction overrides shared examples
-about hands-on environments, graded labs and playground markers. Do not create
-runtime configurations, executable exercises or playground lifecycle markers.
-The course must be usable without a cluster or installed command-line tools.
+Each of the seven sections has two modules. Each module has a private ungraded playground, a graded module lab (`difficulty: intermediate` in `astrona.yaml`) and the section has a capstone lab (`difficulty: advanced`). All environments load the same fixed dataset into one Prometheus v3.5.5 server: a generator script writes OpenMetrics text for one hour (every 15 seconds from Unix time 1767225600) and `promtool tsdb create-blocks-from openmetrics` turns it into a data block. Nothing is scraped, so results do not change over time. A `shuttle` pod runs `/tools/pq.py`, which queries Prometheus at a fixed evaluation time (default 1767229200).
+
+A learner stores each answer as a PromQL expression in the ConfigMap `answers` (namespace `starfleet`), key `q1`, `q2` and so on. Each validation script evaluates the learner's expression and a reference expression at the same fixed time and compares labels and values. Print command output in lessons only when the value is fully determined by the dataset; describe rate, quantile and other interpolated results as approximate.
+
+All environments were built without a live run. Static checks only: `astrona validate -c`, `bash -n` and a YAML parse. Each lab README is marked UNTESTED. Record live evidence separately when it exists.
 
 ### Teaching structure and depth
 
 Every section begins with its own introduction and measurable learning outcomes.
 Every module contains a landing page, developed teaching lessons and a final
 `# Summary` page. Put the summary after all its lessons and before the next
-module. This reading-only summary has no playground destruction marker.
+module. The summary ends with <!-- astrona:playground:destroy --> on its own line.
 
 Explain mechanisms, responsible components, realistic examples and the limits
 of each claim. Include worked reasoning and relevant failure cases. Avoid thin
@@ -226,17 +226,7 @@ self-contained-page and Mermaid rules apply throughout.
 
 ### Reusable question data
 
-Write original single-choice questions as YAML banks under section folders and
-`assessments/`. Use the versioned contract in `schemas/question-bank.schema.json`
-and teaching order in `assessments/index.yaml`. Each bank has 5–15 questions with
-stable IDs, one correct option, per-option feedback, a measurable learning
-objective and source reading paths for author traceability.
-
-Do not register YAML as a Markdown reading. A future renderer consumes the bank
-index and presents the checkpoint after its declared reading, preserving bank
-order when several share an anchor. Do not expose answer keys before submission
-in a production quiz interface. These public banks are practice material, not
-secure or official exam questions.
+Each section has `sections/section-0N0/quiz.yaml` and the course has `sections/final-domain-quiz.yaml`. Both follow `schemas/question-bank.schema.json`: schema version 1, exactly three options (a, b, c), one `correct_option`, per-option feedback, a measurable learning objective, source reading paths and a `placement`. A section bank has 5 to 15 questions (12 here) and the final bank has at most 15. Spread the correct option evenly over a, b and c. The manifest lists each bank as a `type: quiz` item with `pass_score: 70`. These banks are practice material, not secure or official exam questions.
 
 ### Review and authoring checks
 
@@ -248,4 +238,4 @@ The ATP registration remains draft until publication is approved.
 Primary author sources are recorded in `SOURCES.md`. The objective list was
 verified on 2026-10-11. Detailed reading expansions were written on 2026-10-11.
 Validate manifest paths, summary ordering, curriculum coverage and question
-contracts. Do not claim runtime verification for a reading-only course.
+contracts. Do not claim live verification until the actual runtime result has been recorded.

@@ -1,12 +1,11 @@
 #!/usr/bin/env bash
+# Reference answers for the lab. `astrona test` runs this to prove the checks pass.
 set -euo pipefail
-if [[ "$(kubectl config current-context)" != "kind-astro-ats-049-lab-070-01-01" ]]; then
-  printf 'Refusing to operate on another Kubernetes context\n' >&2
-  exit 1
-fi
-lab_directory="$(cd "$(dirname "$0")/.." && pwd)"
-solution_directory="$lab_directory/solution"
-node_name="astro-ats-049-lab-070-01-01-control-plane"
-worker_name="astro-ats-049-lab-070-01-01-worker"
 
-python3 "$solution_directory/record.py"
+kubectl -n starfleet create configmap answers \
+  --from-literal=q1='time() - process_start_time_seconds' \
+  --from-literal=q2='(time() - backup_last_success_timestamp_seconds) / 60' \
+  --from-literal=q3='time() - backup_last_success_timestamp_seconds > 900' \
+  --from-literal=q4='time() - timestamp(up)' \
+  --from-literal=q5='(time() - process_start_time_seconds) / 3600 < 2' \
+  --dry-run=client -o yaml | kubectl apply -f -

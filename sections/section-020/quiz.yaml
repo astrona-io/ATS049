@@ -1,0 +1,255 @@
+# Knowledge check for section 020. Listed in astrona.yaml as a `type: quiz` entry after the capstone lab.
+schema_version: 1
+kind: question_bank
+id: ats049-020
+course_id: ATS049
+exam_code: PCA
+status: draft
+provenance: Original practice material written for this course; not official exam questions.
+scope:
+  type: section
+  id: section-020
+  title: "Rates and Derivatives"
+placement:
+  position: after
+  reading: sections/section-020/capstone/labs/lab-01/question.md
+questions:
+  - id: ats049-020-q01
+    type: single_choice
+    difficulty: beginner
+    learning_objective: "Explain why a counter is read with rate() and not by its raw value"
+    source_readings:
+      - sections/section-020/module-01/course-01-counters-rate-and-window-sizing.md
+    prompt: "The counter `http_requests_total` shows the value 48,000 for one series. What does that number tell you?"
+    options:
+      - id: a
+        text: "The total number of requests counted since the counter started from 0, so a speed needs `rate()` over a range."
+        explanation: "Correct. A counter only grows, and its value is a total since it started from 0. `rate()` over a range turns the total into a speed."
+      - id: b
+        text: "The number of requests per second at this moment."
+        explanation: "This option is not correct. A counter holds a total since the process started, not a speed."
+      - id: c
+        text: "The number of requests in the last 5 minutes."
+        explanation: "This option is not correct. The lookback delta only decides which sample is shown. It does not make the value a count of the last 5 minutes."
+    correct_option: a
+    explanation: "A counter only grows, and its value is a total since it started from 0. `rate()` over a range turns the total into a speed."
+
+  - id: ats049-020-q02
+    type: single_choice
+    difficulty: beginner
+    learning_objective: "Explain what rate() returns and in which unit"
+    source_readings:
+      - sections/section-020/module-01/course-01-counters-rate-and-window-sizing.md
+    prompt: "A counter grows by 150 in every 15 second step. What does `rate(counter[5m])` return for it?"
+    options:
+      - id: a
+        text: "Close to 150, the increase per step."
+        explanation: "This option is not correct. `rate()` returns a per-second value, not an increase per sample step."
+      - id: b
+        text: "Close to 10, the average increase per second."
+        explanation: "Correct. `rate()` returns the average increase per second over the range. 150 per 15 seconds is 10 per second."
+      - id: c
+        text: "Close to 3000, the increase over the 5 minute range."
+        explanation: "This option is not correct. That is the value `increase()` returns. `rate()` divides it by the range in seconds."
+    correct_option: b
+    explanation: "`rate()` returns the average increase per second over the range. 150 per 15 seconds is 10 per second."
+
+  - id: ats049-020-q03
+    type: single_choice
+    difficulty: intermediate
+    learning_objective: "Size the range of rate() against the interval between samples"
+    source_readings:
+      - sections/section-020/module-01/course-01-counters-rate-and-window-sizing.md
+    prompt: "Samples arrive every 15 seconds. You write `rate(http_requests_total[15s])`. What is the likely result?"
+    options:
+      - id: a
+        text: "An empty result, because the range holds at most one sample and `rate()` needs at least two."
+        explanation: "Correct. A range selector is left-open and right-closed, so a 15 second range holds one sample here. `rate()` needs two samples in the range, so nothing is returned. Use a range of at least four sample intervals."
+      - id: b
+        text: "The exact current speed."
+        explanation: "This option is not correct. One sample cannot give a speed. A rate is calculated from the difference between two samples."
+      - id: c
+        text: "The same result as `irate()` over 15 seconds."
+        explanation: "This option is not correct. `irate()` also needs two samples, so a range that holds one sample returns nothing for both functions."
+    correct_option: a
+    explanation: "A range selector is left-open and right-closed, so a 15 second range holds one sample here. `rate()` needs two samples in the range, so nothing is returned. Use a range of at least four sample intervals."
+
+  - id: ats049-020-q04
+    type: single_choice
+    difficulty: intermediate
+    learning_objective: "Choose between rate() and increase()"
+    source_readings:
+      - sections/section-020/module-01/course-02-increase-irate-and-what-each-returns.md
+    prompt: "The crew asks how many 500 responses an instance returned during the last 10 minutes. Which expression fits?"
+    options:
+      - id: a
+        text: "`rate(http_requests_total{status=\"500\"}[10m])`"
+        explanation: "This option is not correct. That returns responses per second, not a count for the 10 minutes."
+      - id: b
+        text: "`irate(http_requests_total{status=\"500\"}[10m])`"
+        explanation: "This option is not correct. `irate()` uses only the last two samples of the range and returns a per-second speed."
+      - id: c
+        text: "`increase(http_requests_total{status=\"500\"}[10m])`"
+        explanation: "Correct. `increase()` returns how much the counter grew over the range, which is a count. `rate()` is the same value divided by the range in seconds."
+    correct_option: c
+    explanation: "`increase()` returns how much the counter grew over the range, which is a count. `rate()` is the same value divided by the range in seconds."
+
+  - id: ats049-020-q05
+    type: single_choice
+    difficulty: intermediate
+    learning_objective: "Explain what irate() uses from the range"
+    source_readings:
+      - sections/section-020/module-01/course-02-increase-irate-and-what-each-returns.md
+    prompt: "What does `irate(http_requests_total[5m])` calculate?"
+    options:
+      - id: a
+        text: "The average speed over all samples of the 5 minute range."
+        explanation: "This option is not correct. That is `rate()`. `irate()` ignores the other samples."
+      - id: b
+        text: "The speed between the last two samples in the range."
+        explanation: "Correct. `irate()` looks only at the last two samples of the range, so it follows fast changes and also follows every spike. The range only decides how far back the function may search for them."
+      - id: c
+        text: "The total growth over the 5 minute range."
+        explanation: "This option is not correct. That is `increase()`."
+    correct_option: b
+    explanation: "`irate()` looks only at the last two samples of the range, so it follows fast changes and also follows every spike. The range only decides how far back the function may search for them."
+
+  - id: ats049-020-q06
+    type: single_choice
+    difficulty: intermediate
+    learning_objective: "Explain how rate() and increase() handle a counter reset"
+    source_readings:
+      - sections/section-020/module-01/course-03-counter-resets-and-aggregated-rates.md
+    prompt: "A counter holds 900, 915 and 930 and then, after a restart, 3 and 18. How does `increase()` treat the drop from 930 to 3?"
+    options:
+      - id: a
+        text: "It returns a negative value for the range."
+        explanation: "This option is not correct. `increase()` never returns a negative value for a counter, because a drop is read as a reset."
+      - id: b
+        text: "It ignores the samples after the drop."
+        explanation: "This option is not correct. The samples after the reset are included. The function only corrects the drop."
+      - id: c
+        text: "It treats the drop as a reset, assumes the counter restarted at 0 and adds the new value to the total."
+        explanation: "Correct. A value lower than the previous one is read as a reset to 0. The function adds the samples after the reset to the total, so the restart does not produce a negative value."
+    correct_option: c
+    explanation: "A value lower than the previous one is read as a reset to 0. The function adds the samples after the reset to the total, so the restart does not produce a negative value."
+
+  - id: ats049-020-q07
+    type: single_choice
+    difficulty: intermediate
+    learning_objective: "Aggregate a rate in the correct order"
+    source_readings:
+      - sections/section-020/module-01/course-03-counter-resets-and-aggregated-rates.md
+    prompt: "You want the total request speed of all `bridge` series. Which expression is correct?"
+    options:
+      - id: a
+        text: "`rate(sum(http_requests_total{job=\"bridge\"})[5m])`"
+        explanation: "This option is not correct. This is not valid PromQL, because `sum()` returns an instant vector and `rate()` needs a range selector."
+      - id: b
+        text: "`sum(rate(http_requests_total{job=\"bridge\"}[5m]))`"
+        explanation: "Correct. `rate()` must run on each series first, so that every counter reset is repaired for its own series. Then `sum()` adds the speeds."
+      - id: c
+        text: "`sum(http_requests_total{job=\"bridge\"})`"
+        explanation: "This option is not correct. This returns the sum of the counters, which is a total and not a speed."
+    correct_option: b
+    explanation: "`rate()` must run on each series first, so that every counter reset is repaired for its own series. Then `sum()` adds the speeds."
+
+  - id: ats049-020-q08
+    type: single_choice
+    difficulty: intermediate
+    learning_objective: "Choose between by and without when aggregating a rate"
+    source_readings:
+      - sections/section-020/module-01/course-03-counter-resets-and-aggregated-rates.md
+    prompt: "You aggregate a rate and want to remove only the labels `method` and `status` and keep every other label. Which clause does that?"
+    options:
+      - id: a
+        text: "`without (method, status)`"
+        explanation: "Correct. `without` removes the listed labels and keeps the rest. `by` keeps the listed labels and removes the rest."
+      - id: b
+        text: "`by (method, status)`"
+        explanation: "This option is not correct. `by` keeps the listed labels and removes all others, which is the opposite."
+      - id: c
+        text: "`by (job)`"
+        explanation: "This option is not correct. This keeps only `job` and drops every other label, such as `instance`."
+    correct_option: a
+    explanation: "`without` removes the listed labels and keeps the rest. `by` keeps the listed labels and removes the rest."
+
+  - id: ats049-020-q09
+    type: single_choice
+    difficulty: beginner
+    learning_objective: "Explain why delta() is used for gauges and rate() is not"
+    source_readings:
+      - sections/section-020/module-02/course-01-delta-idelta-and-gauges.md
+    prompt: "The gauge `queue_depth` falls from 29 to 10 during a range. Why is `rate(queue_depth[5m])` the wrong function?"
+    options:
+      - id: a
+        text: "`rate()` is only for gauges that fall."
+        explanation: "This option is not correct. `rate()` is meant for counters, whatever the direction of the gauge."
+      - id: b
+        text: "`rate()` reads a fall as a counter reset and adds the new value to the total, so the result is not the real change."
+        explanation: "Correct. A gauge can go down in normal operation. `rate()` would read the fall as a reset, so the gauge needs `delta()` or `deriv()`."
+      - id: c
+        text: "`rate()` returns only whole numbers."
+        explanation: "This option is not correct. `rate()` returns a float."
+    correct_option: b
+    explanation: "A gauge can go down in normal operation. `rate()` would read the fall as a reset, so the gauge needs `delta()` or `deriv()`."
+
+  - id: ats049-020-q10
+    type: single_choice
+    difficulty: intermediate
+    learning_objective: "Read the result of deriv() and its unit"
+    source_readings:
+      - sections/section-020/module-02/course-02-deriv-and-predict-linear.md
+    prompt: "`deriv(disk_used_bytes{instance=\"probe-0:9100\"}[15m])` returns close to 1,000,000. What does it mean?"
+    options:
+      - id: a
+        text: "The disk is 1,000,000 bytes full."
+        explanation: "This option is not correct. That would be the value of the gauge, not its slope."
+      - id: b
+        text: "The disk will be full in 1,000,000 seconds."
+        explanation: "This option is not correct. The slope alone gives no time. The time needs the free space divided by the slope."
+      - id: c
+        text: "The disk used space grows by about 1,000,000 bytes per second."
+        explanation: "Correct. `deriv()` returns the slope of the fitted line in units per second, here bytes per second."
+    correct_option: c
+    explanation: "`deriv()` returns the slope of the fitted line in units per second, here bytes per second."
+
+  - id: ats049-020-q11
+    type: single_choice
+    difficulty: advanced
+    learning_objective: "Use predict_linear() with the correct unit for its second argument"
+    source_readings:
+      - sections/section-020/module-02/course-02-deriv-and-predict-linear.md
+    prompt: "Which expression gives the forecast of `temperature_celsius` in 1 hour?"
+    options:
+      - id: a
+        text: "`predict_linear(temperature_celsius[10m], 3600)`"
+        explanation: "Correct. The second argument of `predict_linear()` is the number of seconds to look ahead, and 1 hour is 3600 seconds. The function draws a line through the samples of the range and reads it at that time."
+      - id: b
+        text: "`predict_linear(temperature_celsius[10m], 1)`"
+        explanation: "This option is not correct. The second argument is in seconds, so this predicts 1 second ahead."
+      - id: c
+        text: "`predict_linear(temperature_celsius[1h], 10m)`"
+        explanation: "This option is not correct. The second argument is a number of seconds and not a duration."
+    correct_option: a
+    explanation: "The second argument of `predict_linear()` is the number of seconds to look ahead, and 1 hour is 3600 seconds. The function draws a line through the samples of the range and reads it at that time."
+
+  - id: ats049-020-q12
+    type: single_choice
+    difficulty: intermediate
+    learning_objective: "Choose between changes() and resets()"
+    source_readings:
+      - sections/section-020/module-02/course-03-changes-resets-and-choosing-the-function.md
+    prompt: "You want to know how many times a process restarted in the last hour, and the metric is the counter `http_requests_total`. Which function fits?"
+    options:
+      - id: a
+        text: "`delta(http_requests_total[1h])`"
+        explanation: "This option is not correct. `delta()` is for gauges and returns the difference between the first and the last value."
+      - id: b
+        text: "`deriv(http_requests_total[1h])`"
+        explanation: "This option is not correct. `deriv()` returns the slope of a gauge. It does not count restarts."
+      - id: c
+        text: "`resets(http_requests_total[1h])`"
+        explanation: "Correct. `resets()` counts the times a counter went down, and a drop of a counter means a restart."
+    correct_option: c
+    explanation: "`resets()` counts the times a counter went down, and a drop of a counter means a restart."

@@ -1,0 +1,74 @@
+# yaml-language-server: $schema=https://cli.astrona.io/schema/lab-config.schema.json
+#
+# Gauges: delta, deriv And predict_linear (LAB). Graded against the live Prometheus server. UNTESTED: built
+# without a live run.
+apiVersion: astrona.io/v1
+metadata:
+  name: ats-049-lab-020-02
+  docs:
+    prerequisites: prerequisites.md
+    question: question.md
+    solution: solution.md
+
+runtime:
+  type: kind
+  kind:
+    image: kindest/node:v1.35.8
+    preloadImages:
+      - quay.io/prometheus/prometheus:v3.5.5
+      - docker.io/library/python:3.13-alpine
+
+bootstrap:
+  manifests:
+    - name: lab-start
+      type: file
+      source: manifests/lab-start.yaml
+  waitFor:
+    - resource: deploy/prometheus
+      namespace: starfleet
+    - resource: deploy/shuttle
+      namespace: starfleet
+
+# Applied only by `astrona test`: the reference solution (writes the answers).
+testing:
+  init:
+    - name: apply-solution
+      description: Write the reference answers
+      type: file
+      source: solution/apply.sh
+
+validation:
+  scripts:
+    - name: queue-change-5m
+      description: "q1 returns the change of every queue depth over 5 minutes"
+      type: file
+      source: validation/validate-queue-change-5m.sh
+      hint: "queue_depth is a gauge. Use delta() with a 5m range, not rate()."
+    - name: disk-seconds-to-full
+      description: "q2 returns the seconds until each disk is full, from the slope of the last 15 minutes"
+      type: file
+      source: validation/validate-disk-seconds-to-full.sh
+      hint: "Free space is disk_total_bytes - disk_used_bytes. Divide it by deriv(disk_used_bytes[15m]). Test with --time 1767228600."
+    - name: temperature-in-30-minutes
+      description: "q3 returns the predicted temperature in 30 minutes from the last 10 minutes"
+      type: file
+      source: validation/validate-temperature-in-30-minutes.sh
+      hint: "Use predict_linear(temperature_celsius[10m], 1800). Test with --time 1767228600."
+    - name: disks-full-within-a-day
+      description: "q4 returns only the disks that are predicted to be over their total within 24 hours"
+      type: file
+      source: validation/validate-disks-full-within-a-day.sh
+      hint: "Compare predict_linear(disk_used_bytes[1h], 24 * 3600) with disk_total_bytes using the > operator. Test with --time 1767228600."
+    - name: counters-that-reset
+      description: "q5 returns only the counter series that had a reset in the last hour"
+      type: file
+      source: validation/validate-counters-that-reset.sh
+      hint: "Use resets() on http_requests_total with a 1h range and keep the series above 0."
+    - name: queue-changes-10m
+      description: "q6 returns how many times each queue depth changed in 10 minutes"
+      type: file
+      source: validation/validate-queue-changes-10m.sh
+      hint: "Use changes() with a 10m range on queue_depth."
+
+teardown:
+  keepCluster: false

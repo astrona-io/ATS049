@@ -1,5 +1,7 @@
+---
 version: 1
-approval: PCA requested 2026-10-11; established reading-only scope
+approval: Maintainer requested PCA, CCA and CAPA playgrounds and graded labs on 2026-10-13,
+  superseding the earlier reading-only scope.
 course:
   id: ATS049
   certification:
@@ -17,150 +19,531 @@ course:
     - Histograms
     - Timestamp Metrics
 defaults:
-  playground: false
-  module_lab: false
-  capstone: false
-  section_quiz: false
+  playground: true
+  module_lab: true
+  capstone: true
+  section_quiz: true
   final_quiz: true
-assessment_format: YAML question banks v1, registered in assessments/index.yaml
+assessment_format: 'YAML question banks v1 (schemas/question-bank.schema.json): sections/section-0N0/quiz.yaml
+  per section and sections/final-domain-quiz.yaml, registered in astrona.yaml as type:
+  quiz items'
 sections:
 - id: section-010
   title: Selecting Data
   curriculum_item: Selecting Data
-  capstone: false
-  section_quiz: false
-  modules:
-  - id: module-01
-    title: Selecting PromQL Data And Evaluation Time
-    objectives:
-    - Distinguish instant vectors, range vectors and range queries.
-    - Interpret equality and anchored regular-expression matchers.
-    - Explain lookback, staleness, offset and explicit evaluation time.
-    - Choose selectors whose labels match the intended population.
-    outline:
-    - Selecting PromQL Data And Evaluation Time
-    playground: false
-    module_lab: false
-    sources:
-    - reading: sections/section-010/module-01/course-01-selecting-promql-data-and-evaluation-time.md
-      adapted_from: null
-- id: section-020
-  title: Rates and Derivatives
-  curriculum_item: Rates and Derivatives
-  capstone: false
-  section_quiz: false
-  modules:
-  - id: module-01
-    title: Counter Rates, Resets And Gauge Derivatives
-    objectives:
-    - Choose rate, increase or irate for counter questions.
-    - Explain reset correction and why rate precedes aggregation.
-    - Distinguish counter calculations from gauge delta and deriv.
-    - Interpret extrapolation, window length and insufficient samples.
-    outline:
-    - Counter Rates, Resets And Gauge Derivatives
-    playground: false
-    module_lab: false
-    sources:
-    - reading: sections/section-020/module-01/course-01-counter-rates-resets-and-gauge-derivatives.md
-      adapted_from: null
-- id: section-030
-  title: Aggregating over time
-  curriculum_item: Aggregating over time
-  capstone: false
+  capstone: true
   section_quiz: true
   modules:
   - id: module-01
-    title: Aggregating Samples Across Time Windows
+    title: Selectors, Matchers And The Series Model
     objectives:
-    - Distinguish per-series time aggregation from cross-series aggregation.
-    - Choose avg, max, count and present-over-time functions appropriately.
-    - Explain sample weighting and missing observations.
-    - Interpret subqueries and derived expression windows.
+    - 'Explain what a time series is and which parts of it identify it: the metric
+      name and the set of label pairs.'
+    - Write selectors with the four matchers `=`, `!=`, `=~` and `!~`, and predict
+      which series each one selects.
+    - Explain that a regular expression matcher is fully anchored, and that a matcher
+      for an empty value also selects series that do not have the label.
+    - Explain why a selector needs at least one matcher that cannot match the empty
+      string, and select by metric name with `__name__`.
+    - Name the four PromQL types (instant vector, range vector, scalar and string)
+      and write a range selector with a valid duration.
+    - Count the series a selector returns with `count` and `count by`, and use the
+      count to check a selection.
     outline:
-    - Aggregating Samples Across Time Windows
-    playground: false
-    module_lab: false
+    - 'The Series Model: Samples, Names And Labels'
+    - The Four Label Matchers
+    - Expression Types, Range Selectors And Counting
+    playground: true
+    module_lab: true
     sources:
-    - reading: sections/section-030/module-01/course-01-aggregating-samples-across-time-windows.md
-      adapted_from: null
+    - reading: sections/section-010/module-01/course-01-series-metric-names-and-labels.md
+      adapted_from: 
+    - reading: sections/section-010/module-01/course-02-the-four-label-matchers.md
+      adapted_from: 
+    - reading: sections/section-010/module-01/course-03-expression-types-ranges-and-counting.md
+      adapted_from: 
+    labs:
+    - id: lab-01
+      path: sections/section-010/module-01/labs/lab-01
+      after_reading: sections/section-010/module-01/course-03-expression-types-ranges-and-counting.md
+      objective: Write selectors with =, !=, =~ and !~ that return exact populations
+      status: draft
+      runtime_verification: pending
+  - id: module-02
+    title: 'Evaluation Time: Lookback, Staleness, Offset And @'
+    objectives:
+    - 'State how an instant vector selector chooses a sample: the newest sample in
+      the lookback window that ends at the evaluation time.'
+    - Explain staleness, and explain why a series with no recent samples is absent
+      from a result without any error.
+    - Move a selector in time with `offset`, including a negative offset, and pin
+      it to a fixed time with `@`, `@ start()` and `@ end()`.
+    - Predict the result when `@` and `offset` are combined on one selector.
+    - Explain how a range query evaluates an expression at each step, and the difference
+      between the step and the window of a range selector.
+    - Choose an evaluation time with `--time`, and explain why `--now` returns nothing
+      in this data.
+    outline:
+    - Lookback Delta And Staleness
+    - The offset And @ Modifiers
+    - Range Queries, Step And Window
+    playground: true
+    module_lab: true
+    sources:
+    - reading: sections/section-010/module-02/course-01-lookback-delta-and-staleness.md
+      adapted_from: 
+    - reading: sections/section-010/module-02/course-02-offset-and-the-at-modifier.md
+      adapted_from: 
+    - reading: sections/section-010/module-02/course-03-range-queries-step-and-window.md
+      adapted_from: 
+    labs:
+    - id: lab-01
+      path: sections/section-010/module-02/labs/lab-01
+      after_reading: sections/section-010/module-02/course-03-range-queries-step-and-window.md
+      objective: Move selectors with offset, negative offset and @
+      status: draft
+      runtime_verification: pending
+- id: section-020
+  title: Rates and Derivatives
+  curriculum_item: Rates and Derivatives
+  capstone: true
+  section_quiz: true
+  modules:
+  - id: module-01
+    title: Counters, rate And increase
+    objectives:
+    - Explain what a counter is and why `rate()` is the right function for it.
+    - Choose a range for `rate()` that holds enough samples for the scrape interval.
+    - Predict the value of `rate()` and `increase()` for a counter that grows by a
+      constant amount.
+    - Choose between `rate()`, `increase()` and `irate()` for a graph, an alert and
+      a quick look at a spike.
+    - Explain how Prometheus detects a counter reset and what it adds back.
+    - Write `sum by (...)` and `sum without (...)` over `rate()` and explain why `rate(sum(...))`
+      is wrong.
+    outline:
+    - Counters, rate() And Window Sizing
+    - increase(), irate() And What Each Function Returns
+    - Counter Resets And Aggregated Rates
+    playground: true
+    module_lab: true
+    sources:
+    - reading: sections/section-020/module-01/course-01-counters-rate-and-window-sizing.md
+      adapted_from: 
+    - reading: sections/section-020/module-01/course-02-increase-irate-and-what-each-returns.md
+      adapted_from: 
+    - reading: sections/section-020/module-01/course-03-counter-resets-and-aggregated-rates.md
+      adapted_from: 
+    labs:
+    - id: lab-01
+      path: sections/section-020/module-01/labs/lab-01
+      after_reading: sections/section-020/module-01/course-03-counter-resets-and-aggregated-rates.md
+      objective: Write rate, increase and irate expressions for counters
+      status: draft
+      runtime_verification: pending
+  - id: module-02
+    title: 'Gauges: delta, deriv And predict_linear'
+    objectives:
+    - Decide whether a metric is a counter or a gauge from its behaviour, and name
+      the function family for each.
+    - Use `delta()` and `idelta()` to measure the change of a gauge over a range or
+      between the last two samples.
+    - Explain why `rate()` gives a wrong result on a gauge that goes down.
+    - Use `deriv()` to measure the speed of change of a gauge in units per second.
+    - Use `predict_linear()` to predict a value, and to compute the time until a disk
+      is full.
+    - Describe how simple linear regression picks the line, and what the range does
+      to the answer.
+    - Use `changes()` and `resets()` to count value changes and counter resets.
+    - Choose between all the counter and gauge functions for a given question.
+    outline:
+    - delta(), idelta() And When A Gauge Is Not A Counter
+    - deriv() And predict_linear()
+    - changes(), resets() And Choosing The Right Function
+    playground: true
+    module_lab: true
+    sources:
+    - reading: sections/section-020/module-02/course-01-delta-idelta-and-gauges.md
+      adapted_from: 
+    - reading: sections/section-020/module-02/course-02-deriv-and-predict-linear.md
+      adapted_from: 
+    - reading: sections/section-020/module-02/course-03-changes-resets-and-choosing-the-function.md
+      adapted_from: 
+    labs:
+    - id: lab-01
+      path: sections/section-020/module-02/labs/lab-01
+      after_reading: sections/section-020/module-02/course-03-changes-resets-and-choosing-the-function.md
+      objective: Use delta, deriv and predict_linear on gauges
+      status: draft
+      runtime_verification: pending
+- id: section-030
+  title: Aggregating Over Time
+  curriculum_item: Aggregating over time
+  capstone: true
+  section_quiz: true
+  modules:
+  - id: module-01
+    title: The over_time Functions
+    objectives:
+    - Explain what a range vector is and which samples a range such as `[5m]` selects.
+    - Use `avg_over_time`, `min_over_time`, `max_over_time`, `sum_over_time` and `count_over_time`
+      and say what each returns per series.
+    - Use `quantile_over_time` and `stddev_over_time` to describe how a gauge is spread
+      over a window.
+    - Use `last_over_time`, `present_over_time` and `absent_over_time` to find the
+      newest value of a series and to detect a series that has no samples.
+    - Choose a window that holds enough samples for the scrape interval and long enough
+      to cover the pattern you look for.
+    - Explain why `avg_over_time` of a counter and an average of ratios mislead, and
+      name the correct alternative.
+    outline:
+    - Aggregating A Gauge Over A Window
+    - Quantiles, Spread, Last Value And Presence
+    - Choosing The Window And Avoiding Misleading Averages
+    playground: true
+    module_lab: true
+    sources:
+    - reading: sections/section-030/module-01/course-01-aggregating-a-gauge-over-a-window.md
+      adapted_from: 
+    - reading: sections/section-030/module-01/course-02-quantiles-spread-last-value-and-presence.md
+      adapted_from: 
+    - reading: sections/section-030/module-01/course-03-choosing-the-window-and-avoiding-misleading-averages.md
+      adapted_from: 
+    labs:
+    - id: lab-01
+      path: sections/section-030/module-01/labs/lab-01
+      after_reading: sections/section-030/module-01/course-03-choosing-the-window-and-avoiding-misleading-averages.md
+      objective: Reduce a gauge window with min_over_time, quantile_over_time and
+        stddev_over_time
+      status: draft
+      runtime_verification: pending
+  - id: module-02
+    title: Subqueries And Nested Time Aggregation
+    objectives:
+    - Write a subquery with an explicit step and with the default step, and say what
+      the default step is.
+    - State at which times Prometheus evaluates the inner expression of a subquery
+      and which of them belong to the range.
+    - Combine an over_time function with `sum by` and `rate()` to find the peak, the
+      lowest value or the average of a computed value over time.
+    - Explain why the maximum of a sum and the sum of maximums are different results.
+    - Count the evaluations that a subquery makes, and explain when a recording rule
+      is cheaper.
+    - 'Avoid the common mistakes: aggregating a counter before `rate()`, a step that
+      is longer than the inner range, and a range that holds one point.'
+    outline:
+    - Subquery Syntax And Evaluation Times
+    - Nesting Time Aggregation With Aggregates And Rates
+    - Cost, Recording Rules And Nesting Pitfalls
+    playground: true
+    module_lab: true
+    sources:
+    - reading: sections/section-030/module-02/course-01-subquery-syntax-and-evaluation-times.md
+      adapted_from: 
+    - reading: sections/section-030/module-02/course-02-nesting-time-aggregation-with-aggregates-and-rates.md
+      adapted_from: 
+    - reading: sections/section-030/module-02/course-03-cost-recording-rules-and-nesting-pitfalls.md
+      adapted_from: 
+    labs:
+    - id: lab-01
+      path: sections/section-030/module-02/labs/lab-01
+      after_reading: sections/section-030/module-02/course-03-cost-recording-rules-and-nesting-pitfalls.md
+      objective: Write a subquery with an explicit range and step
+      status: draft
+      runtime_verification: pending
 - id: section-040
-  title: Aggregating over dimensions
+  title: Aggregating Over Dimensions
   curriculum_item: Aggregating over dimensions
-  capstone: false
-  section_quiz: false
+  capstone: true
+  section_quiz: true
   modules:
   - id: module-01
-    title: Aggregating Across Labels Without Losing Meaning
+    title: Aggregation Operators With by And without
     objectives:
-    - Interpret by and without grouping.
-    - Choose sum, average, count and ranking operations by measurement meaning.
-    - Explain weighted ratios and aggregation order.
-    - Preserve labels needed for ownership and later matching.
+    - Name what `sum`, `min`, `max`, `avg`, `count` and `group` return for one group
+      of series.
+    - Predict the label set of a result from a `by` clause or a `without` clause.
+    - Explain why aggregation removes the metric name and every label that is not
+      kept.
+    - Write `sum by (...) (rate(...))` and explain why the rate comes before the sum.
+    - Count targets and series with `count`, `count by` and a count of a count.
+    - Read the `up` metric to find targets that are down and targets that have vanished.
     outline:
-    - Aggregating Across Labels Without Losing Meaning
-    playground: false
-    module_lab: false
+    - Aggregation Operators, by And without
+    - Sum Of A Rate By Instance And Mode
+    - count, count by, Cardinality And The up Metric
+    playground: true
+    module_lab: true
     sources:
-    - reading: sections/section-040/module-01/course-01-aggregating-across-labels-without-losing-meaning.md
-      adapted_from: null
+    - reading: sections/section-040/module-01/course-01-aggregation-operators-by-and-without.md
+      adapted_from: 
+    - reading: sections/section-040/module-01/course-02-sum-of-rate-by-instance-and-mode.md
+      adapted_from: 
+    - reading: sections/section-040/module-01/course-03-count-and-cardinality-up.md
+      adapted_from: 
+    labs:
+    - id: lab-01
+      path: sections/section-040/module-01/labs/lab-01
+      after_reading: sections/section-040/module-01/course-03-count-and-cardinality-up.md
+      objective: Sum a rate by job and by instance and mode
+      status: draft
+      runtime_verification: pending
+  - id: module-02
+    title: topk, bottomk, quantile, count_values And Statistics
+    objectives:
+    - Select the highest or lowest series with `topk` and `bottomk`, and explain why
+      the result keeps all original labels.
+    - Rank series inside each group with `by` and `without`, and predict what happens
+      when values are equal.
+    - Compute a quantile, a standard deviation and a variance across series, and say
+      how a quantile across series differs from a quantile of histogram buckets.
+    - Use `count_values` to count how many series have each value.
+    - Explain why the average of per-instance averages is wrong, and write the weighted
+      form.
+    - Choose an aggregation that shows a failing instance instead of hiding it.
+    outline:
+    - topk And bottomk
+    - quantile, stddev, stdvar And count_values
+    - Correct Averaging And Hidden Failures
+    playground: true
+    module_lab: true
+    sources:
+    - reading: sections/section-040/module-02/course-01-topk-and-bottomk.md
+      adapted_from: 
+    - reading: sections/section-040/module-02/course-02-quantile-stddev-count-values.md
+      adapted_from: 
+    - reading: sections/section-040/module-02/course-03-correct-averaging-and-hidden-failures.md
+      adapted_from: 
+    labs:
+    - id: lab-01
+      path: sections/section-040/module-02/labs/lab-01
+      after_reading: sections/section-040/module-02/course-03-correct-averaging-and-hidden-failures.md
+      objective: Rank series with topk and bottomk
+      status: draft
+      runtime_verification: pending
 - id: section-050
-  title: Binary operators
+  title: Binary Operators
   curriculum_item: Binary operators
-  capstone: false
-  section_quiz: false
+  capstone: true
+  section_quiz: true
   modules:
   - id: module-01
-    title: Binary Operators And Vector Matching
+    title: Arithmetic, Comparison And Precedence
     objectives:
-    - Distinguish arithmetic, filtering comparisons and set operators.
-    - Explain default label matching and on or ignoring modifiers.
-    - Interpret group_left and group_right cardinality requirements.
-    - Handle unmatched series and zero denominators explicitly.
+    - Apply `+`, `-`, `*`, `/`, `%`, `^` and `atan2` between a scalar and an instant
+      vector, and between two scalars.
+    - Say which labels survive an arithmetic operation and why the metric name disappears.
+    - Use a comparison operator as a filter, and use the `bool` modifier to return
+      0 or 1 instead.
+    - Explain why a comparison between two scalars must use `bool`.
+    - Predict the evaluation order of an expression from the precedence table, including
+      the right-associative `^`.
+    - Write the error ratio `sum(rate(...5xx)) / sum(rate(...all))` and explain why
+      both sides are aggregated first.
+    - Say what `1 / 0`, `-1 / 0` and `0 / 0` return, and how a comparison removes
+      NaN values from a result.
     outline:
-    - Binary Operators And Vector Matching
-    playground: false
-    module_lab: false
+    - Arithmetic Operators On Scalars And Vectors
+    - Comparison Operators, Filtering And The bool Modifier
+    - Operator Precedence, Error Ratios And Division By Zero
+    playground: true
+    module_lab: true
     sources:
-    - reading: sections/section-050/module-01/course-01-binary-operators-and-vector-matching.md
-      adapted_from: null
+    - reading: sections/section-050/module-01/course-01-arithmetic-operators.md
+      adapted_from: 
+    - reading: sections/section-050/module-01/course-02-comparison-operators-and-bool.md
+      adapted_from: 
+    - reading: sections/section-050/module-01/course-03-precedence-error-ratio-and-division.md
+      adapted_from: 
+    labs:
+    - id: lab-01
+      path: sections/section-050/module-01/labs/lab-01
+      after_reading: sections/section-050/module-01/course-03-precedence-error-ratio-and-division.md
+      objective: Divide two gauges to get a ratio and keep its labels
+      status: draft
+      runtime_verification: pending
+  - id: module-02
+    title: Vector Matching And Set Operators
+    objectives:
+    - Explain why two series match only when their labels are identical, and why the
+      metric name is not part of the comparison.
+    - Use `on(...)` and `ignoring(...)` to choose the labels used for matching, and
+      say which labels the result keeps.
+    - Explain the error that Prometheus returns when one side of a match has more
+      than one series for the same labels.
+    - Use `group_left` and `group_right` to match many series with one, and copy labels
+      such as `version` and `team` from an info metric.
+    - Say which side of a many-to-one match is the many side and which labels the
+      result carries.
+    - Use `and`, `or` and `unless` to keep, add or remove series by their labels,
+      and explain that they ignore the values on the right.
+    outline:
+    - One-To-One Matching With on And ignoring
+    - Many-To-One Matching With group_left And group_right
+    - 'Set Operators: and, or And unless'
+    playground: true
+    module_lab: true
+    sources:
+    - reading: sections/section-050/module-02/course-01-one-to-one-matching.md
+      adapted_from: 
+    - reading: sections/section-050/module-02/course-02-group-left-and-group-right.md
+      adapted_from: 
+    - reading: sections/section-050/module-02/course-03-set-operators.md
+      adapted_from: 
+    labs:
+    - id: lab-01
+      path: sections/section-050/module-02/labs/lab-01
+      after_reading: sections/section-050/module-02/course-03-set-operators.md
+      objective: Match series with ignoring and on
+      status: draft
+      runtime_verification: pending
 - id: section-060
   title: Histograms
   curriculum_item: Histograms
-  capstone: false
-  section_quiz: false
+  capstone: true
+  section_quiz: true
   modules:
   - id: module-01
-    title: Histogram Buckets, Quantiles And Distribution Aggregation
+    title: Classic Histograms And histogram_quantile
     objectives:
-    - Interpret cumulative classic buckets, count and sum.
-    - Calculate compatible fleet quantiles and mean duration.
-    - Distinguish summary quantiles from aggregatable histogram evidence.
-    - Explain bucket approximation and native-histogram representation.
+    - Describe the series that one classic histogram creates and explain why bucket
+      values are cumulative.
+    - Read `le` bucket, `_sum` and `_count` values and work out how many observations
+      fell between two bounds.
+    - Write `histogram_quantile(0.9, sum by (le) (rate(...[5m])))` and say why each
+      part is needed.
+    - Estimate by hand the value that linear interpolation returns, and say how wide
+      the possible error is.
+    - Explain why averaging quantiles from different instances gives a wrong answer
+      and aggregate buckets instead.
+    - Explain what a counter reset does to raw bucket values and why `rate` still
+      gives a correct quantile.
     outline:
-    - Histogram Buckets, Quantiles And Distribution Aggregation
-    playground: false
-    module_lab: false
+    - What A Classic Histogram Exposes
+    - Rate Over Buckets And histogram_quantile
+    - Aggregating Buckets Across Instances
+    playground: true
+    module_lab: true
     sources:
-    - reading: sections/section-060/module-01/course-01-histogram-buckets-quantiles-and-distribution-aggregation.md
-      adapted_from: null
+    - reading: sections/section-060/module-01/course-01-what-a-classic-histogram-exposes.md
+      adapted_from: 
+    - reading: sections/section-060/module-01/course-02-rate-over-buckets-and-histogram-quantile.md
+      adapted_from: 
+    - reading: sections/section-060/module-01/course-03-aggregating-buckets-across-instances.md
+      adapted_from: 
+    labs:
+    - id: lab-01
+      path: sections/section-060/module-01/labs/lab-01
+      after_reading: sections/section-060/module-01/course-03-aggregating-buckets-across-instances.md
+      objective: Estimate a 0.9 quantile per instance and for the whole service from
+        bucket rates
+      status: draft
+      runtime_verification: pending
+  - id: module-02
+    title: Means, Fractions And Native Histograms
+    objectives:
+    - Compute the mean duration with `rate(_sum) / rate(_count)` per instance and
+      for all instances together.
+    - Explain why a mean of means is wrong and why the ratio must be taken after the
+      sums.
+    - Compute the share of requests at or under a bucket bound, and the share above
+      it.
+    - Use `ignoring(le)` to divide a bucket series by a series without `le`.
+    - Explain why a threshold must be an existing bucket bound.
+    - Compare histograms and summaries for aggregation, accuracy and cost.
+    - Describe native histograms, how their queries differ from classic ones, and
+      how the quantile function treats them.
+    outline:
+    - Mean Duration From Sum And Count
+    - Share Of Requests Under A Threshold
+    - Histograms, Summaries And Native Histograms
+    playground: true
+    module_lab: true
+    sources:
+    - reading: sections/section-060/module-02/course-01-mean-duration-from-sum-and-count.md
+      adapted_from: 
+    - reading: sections/section-060/module-02/course-02-share-of-requests-under-a-threshold.md
+      adapted_from: 
+    - reading: sections/section-060/module-02/course-03-histograms-summaries-and-native-histograms.md
+      adapted_from: 
+    labs:
+    - id: lab-01
+      path: sections/section-060/module-02/labs/lab-01
+      after_reading: sections/section-060/module-02/course-03-histograms-summaries-and-native-histograms.md
+      objective: Compute the mean duration per instance and for the whole service
+        from rate of sum and count
+      status: draft
+      runtime_verification: pending
 - id: section-070
   title: Timestamp Metrics
   curriculum_item: Timestamp Metrics
-  capstone: false
-  section_quiz: false
+  capstone: true
+  section_quiz: true
   modules:
   - id: module-01
-    title: Event Timestamps, Sample Freshness And Overdue Work
+    title: time, timestamp And Age Of An Event
     objectives:
-    - Distinguish a timestamp-valued gauge from a sample timestamp.
-    - Use time and timestamp functions for different age questions.
-    - Define overdue-work alerts with ownership and lifecycle context.
-    - Account for clock errors, missing series and observation delay.
+    - Explain what `time()` returns, and why it is the evaluation time and not the
+      wall clock of the server.
+    - Explain what `timestamp(v)` returns and how it differs from a metric that stores
+      a timestamp as its value.
+    - Compute the uptime of a process as `time() - process_start_time_seconds`.
+    - Compute the age of the last successful backup from `backup_last_success_timestamp_seconds`.
+    - Convert an age from seconds to minutes, hours or days and compare it with a
+      threshold.
+    - Write an overdue-work expression that returns only the series that are over
+      the threshold.
     outline:
-    - Event Timestamps, Sample Freshness And Overdue Work
-    playground: false
-    module_lab: false
+    - 'time() And timestamp(): Two Different Clocks'
+    - 'The Age Of An Event: Uptime And Last Success'
+    - 'Overdue Work: Thresholds And Unit Conversion'
+    playground: true
+    module_lab: true
     sources:
-    - reading: sections/section-070/module-01/course-01-event-timestamps-sample-freshness-and-overdue-work.md
-      adapted_from: null
+    - reading: sections/section-070/module-01/course-01-time-versus-timestamp.md
+      adapted_from: 
+    - reading: sections/section-070/module-01/course-02-age-of-an-event.md
+      adapted_from: 
+    - reading: sections/section-070/module-01/course-03-overdue-work-and-units.md
+      adapted_from: 
+    labs:
+    - id: lab-01
+      path: sections/section-070/module-01/labs/lab-01
+      after_reading: sections/section-070/module-01/course-03-overdue-work-and-units.md
+      objective: Compute uptime and backup age with time() minus a timestamp-valued
+        metric
+      status: draft
+      runtime_verification: pending
+  - id: module-02
+    title: Freshness, Absence And Gaps
+    objectives:
+    - Explain what `up` is, who writes it, and the difference between `up == 0` and
+      a missing `up` series.
+    - Use `absent()` and `absent_over_time()` and predict the labels of the series
+      they return.
+    - Explain why an instant query stops returning a series about 5 minutes after
+      its last sample, and how the left-open window decides the exact moment.
+    - Detect restarts with `changes()` on a start time metric.
+    - Find stale series with `time() - timestamp(v)` and series that vanished with
+      `offset` and `unless`.
+    - Tell a gap in the samples from a failed scrape.
+    outline:
+    - up And What A Missing Series Means
+    - absent() And absent_over_time()
+    - Restarts, Stale Series And Gaps
+    playground: true
+    module_lab: true
+    sources:
+    - reading: sections/section-070/module-02/course-01-up-and-missing-series.md
+      adapted_from: 
+    - reading: sections/section-070/module-02/course-02-absent-and-absent-over-time.md
+      adapted_from: 
+    - reading: sections/section-070/module-02/course-03-restarts-stale-series-and-gaps.md
+      adapted_from: 
+    labs:
+    - id: lab-01
+      path: sections/section-070/module-02/labs/lab-01
+      after_reading: sections/section-070/module-02/course-03-restarts-stale-series-and-gaps.md
+      objective: Find failing targets with up == 0 and missing series with absent()
+      status: draft
+      runtime_verification: pending

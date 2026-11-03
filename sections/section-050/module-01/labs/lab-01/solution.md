@@ -1,89 +1,89 @@
----
-draft: true
-exam_objectives:
-- Binary operators
----
-# Match Vectors Before Dividing Solution
+# Solution
 
-Use a host shell with the private kubeconfig for this independent kind environment. A kubeconfig identifies the cluster and credentials used by kubectl, the Kubernetes command-line tool.
+Solve this lab on `terminal`. Each step stores one expression in the ConfigMap `answers` and ends with `astrona submit`. Start the lab if it is not running:
 
 ```sh
-export KUBECONFIG="$(astrona kubeconfig ats-049-lab-050-01-01)"
-test "$(kubectl config current-context)" = "kind-astro-ats-049-lab-050-01-01" || exit 1
-node_name="astro-ats-049-lab-050-01-01-control-plane"
-worker_name="astro-ats-049-lab-050-01-01-worker"
+astrona run --git ssh://git@github.com/astrona-io/ATS049.git -c sections/section-050/module-01/labs/lab-01
 ```
 
-Keep this connection selected. Host-level commands name only this environment's node containers. They do not operate on the host operating system.
+Every query below uses the evaluation time of the lab, 1767228600. At this time `probe-0` has used 43,000,000,000 bytes and `probe-1` 41,500,000,000 bytes of 100,000,000,000.
 
-## Inspect And Explain
+## Step 1: The used fraction
 
-One instrumented probe serves metrics and structured request logs. A traffic generator makes ten percent of requests fail. Prometheus scrapes every two seconds; no evidence report or learner rule exists.
-
-Inspect the current objects before changing them:
+Both metrics carry the same labels `instance`, `job` and `mountpoint`, so a plain division pairs them one to one. The division removes the metric name and keeps the labels. Test the expression:
 
 ```sh
-kubectl -n starfleet get pods -o wide
-kubectl get nodes -o wide
+kubectl -n starfleet exec deploy/shuttle -- python /tools/pq.py 'disk_used_bytes / disk_total_bytes' --time 1767228600
 ```
 
-Match the failure numerator with its population denominator. State what labels remain and why vector matching is required.
+You should see the fractions from the dataset:
 
-Use the expression `rate(lab_requests_total{status="500"}[20s]) / ignoring(status) group_left sum without(status) (rate(lab_requests_total[20s]))`. The report needs `expression`, `evaluated_at` and `data`. Data is the Prometheus API data object, not only the printed value. Wait for at least twenty seconds of collected traffic before using a rate. Record evidence within five minutes of submission. Changing the expression or claiming an empty result fails.
-
-Record observations in `starfleet/evidence`, whose `report.json` contains the stated report. The verifier reads the live API again; invented values do not pass.
-
-
-Save this as `record.py`:
-
-```python
-import json,subprocess,time,sys,tempfile,os
-
-def call(*args):
- r=subprocess.run(list(args),text=True,capture_output=True,timeout=20)
- assert r.returncode==0, 'Observation command failed: '+args[0]
- return r.stdout.strip()
-def obj(kind,name,ns='starfleet'):
- return json.loads(call('kubectl',*(['-n',ns] if ns else []),'get',kind,name,'-o','json'))
-def api(path):
- script='import urllib.request; print(urllib.request.urlopen('+repr('http://prometheus:9090'+path)+',timeout=8).read().decode())'
- return json.loads(call('kubectl','-n','starfleet','exec','shuttle','--','python','-c',script))
-def save(data):
- resource={'apiVersion':'v1','kind':'ConfigMap','metadata':{'name':'evidence','namespace':'starfleet'},'data':{'report.json':json.dumps(data,sort_keys=True)}}
- with tempfile.NamedTemporaryFile(mode='w',suffix='.json',delete=False) as f:json.dump(resource,f);path=f.name
- try:call('kubectl','apply','-f',path)
- finally:os.unlink(path)
-
-assert call('kubectl','config','current-context') == 'kind-astro-ats-049-lab-050-01-01'
-import urllib.parse
-stamp=time.time()
-expression='rate(lab_requests_total{status="500"}[20s]) / ignoring(status) group_left sum without(status) (rate(lab_requests_total[20s]))'
-answer=api('/api/v1/query?'+urllib.parse.urlencode({'query':expression,'time':stamp}))
-assert answer['status']=='success' and answer['data']['result'], 'Wait for enough scrapes'
-report={'expression':expression,'evaluated_at':stamp,'data':answer['data']}
-save(report)
+```text
+{instance="probe-0:9100", job="probe", mountpoint="/"} 0.43
+{instance="probe-1:9100", job="probe", mountpoint="/"} 0.415
 ```
 
-Apply the scoped correction:
+Store it and check it:
 
 ```sh
-python3 record.py
+kubectl -n starfleet patch configmap answers --type merge -p '{"data":{"q1":"disk_used_bytes / disk_total_bytes"}}'
+astrona submit -c .
 ```
 
-## Verify The Result
+## Step 2: Filter with a threshold
 
-Observe the actual result. A denied request returns a nonzero status when the denial works, so run it separately from a shell sequence that stops on error. Status convergence and a successful request establish different parts of the result.
+A comparison without `bool` filters. Only `probe-0` is above 0.42, and its value stays the fraction:
 
 ```sh
-kubectl -n starfleet get configmaps
-kubectl -n starfleet get deployment probe -o yaml
+kubectl -n starfleet exec deploy/shuttle -- python /tools/pq.py 'disk_used_bytes / disk_total_bytes > 0.42' --time 1767228600
 ```
 
-Evaluate the required expression and preserve its labels, values and evaluation time. The commands above deliberately target one environment. Keep its remaining components available so an unrelated failure cannot stand in for the required denial or correction. No example command output is presented as evidence of a completed run. A matching field alone does not establish that a process used it or that a controller reconciled it.
+```text
+{instance="probe-0:9100", job="probe", mountpoint="/"} 0.43
+```
 
-After recording your result, remove the independent lab with `astrona destroy ats-049-lab-050-01-01`.
+Store it with key `q2` the same way. The division runs before the comparison because it has higher precedence, so no parentheses are needed.
 
-## Common pitfalls
+## Step 3: Flags with bool
 
-> [!WARNING]
-> Confirm the private context and exact node names before a change. Check the stated scope and live result. Do not change unrelated components to hide the original fault.
+Add `bool` after the operator. Both series stay, with the value 1 or 0:
+
+```sh
+kubectl -n starfleet exec deploy/shuttle -- python /tools/pq.py 'disk_used_bytes / disk_total_bytes > bool 0.42' --time 1767228600
+```
+
+```text
+{instance="probe-0:9100", job="probe", mountpoint="/"} 1
+{instance="probe-1:9100", job="probe", mountpoint="/"} 0
+```
+
+Store it with key `q3`.
+
+## Step 4: Fahrenheit
+
+Multiplication and division have the same precedence and run from left to right, and both run before the addition. `temperature_celsius * 9 / 5 + 32` therefore calculates `((t * 9) / 5) + 32`. The temperatures are 40 and 20 degrees at this time:
+
+```sh
+kubectl -n starfleet exec deploy/shuttle -- python /tools/pq.py 'temperature_celsius * 9 / 5 + 32' --time 1767228600
+```
+
+```text
+{instance="probe-0:9100", job="probe", sensor="cpu"} 104
+{instance="probe-1:9100", job="probe", sensor="cpu"} 68
+```
+
+Store it with key `q4`. An equal formula such as `temperature_celsius * 1.8 + 32` is also accepted.
+
+## Step 5: Count with bool and sum
+
+Wrap the flags from step 3 in `sum`. One flag is 1, so the answer is 1:
+
+```sh
+kubectl -n starfleet exec deploy/shuttle -- python /tools/pq.py 'sum(disk_used_bytes / disk_total_bytes > bool 0.42)' --time 1767228600
+```
+
+```text
+{} 1
+```
+
+Store it with key `q5`, then run `astrona submit -c .` once more. All five checks should pass. To store all five answers in one step you can run the reference script of the lab, `solution/apply.sh`, which creates the same ConfigMap.

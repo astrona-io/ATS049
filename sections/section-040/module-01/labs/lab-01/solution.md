@@ -1,89 +1,128 @@
----
-draft: true
-exam_objectives:
-- Aggregating over dimensions
----
-# Aggregate Across Status Labels Solution
+# Solution
 
-Use a host shell with the private kubeconfig for this independent kind environment. A kubeconfig identifies the cluster and credentials used by kubectl, the Kubernetes command-line tool.
+Solve this lab on `terminal`. Each step ends with `astrona submit`. The `--keep` flag keeps the lab running, so you can continue after a failed check. This lab was built without a live run, so compare the values you see with the dataset formulas in the explanations.
+
+Start the lab if it is not running:
 
 ```sh
-export KUBECONFIG="$(astrona kubeconfig ats-049-lab-040-01-01)"
-test "$(kubectl config current-context)" = "kind-astro-ats-049-lab-040-01-01" || exit 1
-node_name="astro-ats-049-lab-040-01-01-control-plane"
-worker_name="astro-ats-049-lab-040-01-01-worker"
+astrona run --git ssh://git@github.com/astrona-io/ATS049.git -c sections/section-040/module-01/labs/lab-01
 ```
 
-Keep this connection selected. Host-level commands name only this environment's node containers. They do not operate on the host operating system.
+The reference answers are these expressions. In the store command, each one goes in as `--from-literal=qN='<expression>'`:
 
-## Inspect And Explain
+- `q1`: `sum by (job) (rate(http_requests_total[5m]))`
+- `q2`: `sum by (instance, mode) (rate(node_cpu_seconds_total[5m]))`
+- `q3`: `count by (__name__) ({job="bridge"})`
+- `q4`: `count by (job) (up == 0)`
+- `q5`: `sum without (instance) (rate(http_requests_total[5m]))`
 
-One instrumented probe serves metrics and structured request logs. A traffic generator makes ten percent of requests fail. Prometheus scrapes every two seconds; no evidence report or learner rule exists.
+## Step 1: Request rate per job
 
-Inspect the current objects before changing them:
+The counter `http_requests_total` only grows, so `rate` over `[5m]` turns every series into a per-second value. `sum by (job)` then adds the series of each job and keeps only the label `job`. The rate must be inside the sum.
+
+Test the expression:
 
 ```sh
-kubectl -n starfleet get pods -o wide
-kubectl get nodes -o wide
+kubectl -n starfleet exec deploy/shuttle -- python /tools/pq.py 'sum by (job) (rate(http_requests_total[5m]))'
 ```
 
-Remove only the status dimension and preserve compatible dimensions. This is an aggregate request rate, not a mean of percentages.
+What to expect: Two series: `bridge` with about 21.8 and `shuttle` with about 5. The job `probe` has no `http_requests_total` series. Compare with your own output; values from `rate` can carry trailing digits.
 
-Use the expression `sum without (status) (rate(lab_requests_total[20s]))`. The report needs `expression`, `evaluated_at` and `data`. Data is the Prometheus API data object, not only the printed value. Wait for at least twenty seconds of collected traffic before using a rate. Record evidence within five minutes of submission. Changing the expression or claiming an empty result fails.
+Store it as `q1`. Keep the earlier answers in the same command:
 
-Record observations in `starfleet/evidence`, whose `report.json` contains the stated report. The verifier reads the live API again; invented values do not pass.
-
-
-Save this as `record.py`:
-
-```python
-import json,subprocess,time,sys,tempfile,os
-
-def call(*args):
- r=subprocess.run(list(args),text=True,capture_output=True,timeout=20)
- assert r.returncode==0, 'Observation command failed: '+args[0]
- return r.stdout.strip()
-def obj(kind,name,ns='starfleet'):
- return json.loads(call('kubectl',*(['-n',ns] if ns else []),'get',kind,name,'-o','json'))
-def api(path):
- script='import urllib.request; print(urllib.request.urlopen('+repr('http://prometheus:9090'+path)+',timeout=8).read().decode())'
- return json.loads(call('kubectl','-n','starfleet','exec','shuttle','--','python','-c',script))
-def save(data):
- resource={'apiVersion':'v1','kind':'ConfigMap','metadata':{'name':'evidence','namespace':'starfleet'},'data':{'report.json':json.dumps(data,sort_keys=True)}}
- with tempfile.NamedTemporaryFile(mode='w',suffix='.json',delete=False) as f:json.dump(resource,f);path=f.name
- try:call('kubectl','apply','-f',path)
- finally:os.unlink(path)
-
-assert call('kubectl','config','current-context') == 'kind-astro-ats-049-lab-040-01-01'
-import urllib.parse
-stamp=time.time()
-expression='sum without (status) (rate(lab_requests_total[20s]))'
-answer=api('/api/v1/query?'+urllib.parse.urlencode({'query':expression,'time':stamp}))
-assert answer['status']=='success' and answer['data']['result'], 'Wait for enough scrapes'
-report={'expression':expression,'evaluated_at':stamp,'data':answer['data']}
-save(report)
-```
-
-Apply the scoped correction:
+Run the store command with the key q1.
 
 ```sh
-python3 record.py
+astrona submit --git ssh://git@github.com/astrona-io/ATS049.git -c sections/section-040/module-01/labs/lab-01 --keep
 ```
 
-## Verify The Result
+The check `request-rate-per-job` now passes.
 
-Observe the actual result. A denied request returns a nonzero status when the denial works, so run it separately from a shell sequence that stops on error. Status convergence and a successful request establish different parts of the result.
+## Step 2: CPU seconds per second by instance and mode
+
+`rate` runs on the six series of each probe, and `sum by (instance, mode)` removes `cpu` and `job`. At `1767228600` both `probe-0` and `probe-1` have samples, so the result has six series.
+
+Test the expression:
 
 ```sh
-kubectl -n starfleet get configmaps
-kubectl -n starfleet get deployment probe -o yaml
+kubectl -n starfleet exec deploy/shuttle -- python /tools/pq.py 'sum by (instance, mode) (rate(node_cpu_seconds_total[5m]))' --time 1767228600
 ```
 
-Evaluate the required expression and preserve its labels, values and evaluation time. The commands above deliberately target one environment. Keep its remaining components available so an unrelated failure cannot stand in for the required denial or correction. No example command output is presented as evidence of a completed run. A matching field alone does not establish that a process used it or that a controller reconciled it.
+What to expect: Six series; for each instance the `idle` value is about 1.2, `user` about 0.55 and `system` about 0.25. Compare with your own output; values from `rate` can carry trailing digits.
 
-After recording your result, remove the independent lab with `astrona destroy ats-049-lab-040-01-01`.
+Store it as `q2`. Keep the earlier answers in the same command:
 
-## Common pitfalls
+Run the store command with the keys q1 to q2.
 
-> [!WARNING]
-> Confirm the private context and exact node names before a change. Check the stated scope and live result. Do not change unrelated components to hide the original fault.
+```sh
+astrona submit --git ssh://git@github.com/astrona-io/ATS049.git -c sections/section-040/module-01/labs/lab-01 --keep
+```
+
+The check `cpu-rate-by-instance-and-mode` now passes.
+
+## Step 3: Series count per metric name for job bridge
+
+The selector `{job="bridge"}` matches the series of every metric of the job. `count by (__name__)` counts them for each metric name, because `__name__` is the one label that survives when you list it in `by`.
+
+Test the expression:
+
+```sh
+kubectl -n starfleet exec deploy/shuttle -- python /tools/pq.py 'count by (__name__) ({job="bridge"})'
+```
+
+What to expect: One line for each metric name of the job; the numbers add up to 35, with 8 for `http_requests_total` and 12 for `http_request_duration_seconds_bucket`. Compare with your own output; values from `rate` can carry trailing digits.
+
+Store it as `q3`. Keep the earlier answers in the same command:
+
+Run the store command with the keys q1 to q3.
+
+```sh
+astrona submit --git ssh://git@github.com/astrona-io/ATS049.git -c sections/section-040/module-01/labs/lab-01 --keep
+```
+
+The check `series-per-metric-name` now passes.
+
+## Step 4: Number of failed targets per job
+
+`up == 0` keeps only the series with the value 0. `count by (job)` counts what is left. At `1767228300` only `shuttle-0` is down, so one series remains.
+
+Test the expression:
+
+```sh
+kubectl -n starfleet exec deploy/shuttle -- python /tools/pq.py 'count by (job) (up == 0)' --time 1767228300
+```
+
+What to expect: One line: `{job="shuttle"} 1`. Compare with your own output; values from `rate` can carry trailing digits.
+
+Store it as `q4`. Keep the earlier answers in the same command:
+
+Run the store command with the keys q1 to q4.
+
+```sh
+astrona submit --git ssh://git@github.com/astrona-io/ATS049.git -c sections/section-040/module-01/labs/lab-01 --keep
+```
+
+The check `failed-targets-per-job` now passes.
+
+## Step 5: Request rate with every label except instance
+
+`sum without (instance)` removes only `instance` and groups by everything else. The rate comes first, inside the sum. The result has the labels `job`, `method` and `status`.
+
+Test the expression:
+
+```sh
+kubectl -n starfleet exec deploy/shuttle -- python /tools/pq.py 'sum without (instance) (rate(http_requests_total[5m]))'
+```
+
+What to expect: Six series, one for each combination of `job`, `method` and `status`. Compare with your own output; values from `rate` can carry trailing digits.
+
+Store it as `q5`. Keep the earlier answers in the same command:
+
+Run the store command with the keys q1 to q5.
+
+```sh
+astrona submit --git ssh://git@github.com/astrona-io/ATS049.git -c sections/section-040/module-01/labs/lab-01 --keep
+```
+
+The check `rate-without-instance` now passes.
+

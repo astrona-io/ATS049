@@ -1,12 +1,9 @@
 #!/usr/bin/env bash
+# Reference solution: stores one PromQL expression per question in the answers ConfigMap.
 set -euo pipefail
-if [[ "$(kubectl config current-context)" != "kind-astro-ats-049-lab-030-01-01" ]]; then
-  printf 'Refusing to operate on another Kubernetes context\n' >&2
-  exit 1
-fi
-lab_directory="$(cd "$(dirname "$0")/.." && pwd)"
-solution_directory="$lab_directory/solution"
-node_name="astro-ats-049-lab-030-01-01-control-plane"
-worker_name="astro-ats-049-lab-030-01-01-worker"
-
-python3 "$solution_directory/record.py"
+kubectl -n starfleet create configmap answers \
+  --from-literal=q1='min_over_time(queue_depth[10m])' \
+  --from-literal=q2='quantile_over_time(0.9, temperature_celsius[10m])' \
+  --from-literal=q3='stddev_over_time(queue_depth{job="bridge"}[5m])' \
+  --from-literal=q4='last_over_time(temperature_celsius[15m])' \
+  --dry-run=client -o yaml | kubectl apply -f -

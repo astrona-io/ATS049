@@ -1,0 +1,75 @@
+# yaml-language-server: $schema=https://cli.astrona.io/schema/lab-config.schema.json
+#
+# topk, bottomk, quantile, count_values And Statistics (LAB). Graded against the live Prometheus server. UNTESTED: built
+# without a live run.
+apiVersion: astrona.io/v1
+metadata:
+  name: ats-049-lab-040-02
+  docs:
+    prerequisites: prerequisites.md
+    question: question.md
+    solution: solution.md
+
+runtime:
+  type: kind
+  kind:
+    image: kindest/node:v1.35.8
+    preloadImages:
+      - quay.io/prometheus/prometheus:v3.5.5
+      - docker.io/library/python:3.13-alpine
+
+bootstrap:
+  manifests:
+    - name: lab-start
+      type: file
+      source: manifests/lab-start.yaml
+  waitFor:
+    - resource: deploy/prometheus
+      namespace: starfleet
+    - resource: deploy/shuttle
+      namespace: starfleet
+
+# Applied only by `astrona test`: the reference solution (writes the answers).
+testing:
+  init:
+    - name: apply-solution
+      description: Write the reference answers
+      type: file
+      source: solution/apply.sh
+
+# One check per question. Each script reads the answer from the ConfigMap `answers`.
+validation:
+  scripts:
+    - name: top-two-instances-by-rate
+      description: Two busiest instances by request rate
+      type: file
+      source: validation/validate-q1.sh
+      hint: Sum the rates by instance first, then rank the result with topk.
+    - name: lowest-queue-per-job
+      description: Series with the lowest queue_depth in each job
+      type: file
+      source: validation/validate-q2.sh
+      hint: bottomk with a by clause keeps the whole series, including the instance label.
+    - name: median-queue-depth
+      description: Median queue_depth across instances
+      type: file
+      source: validation/validate-q3.sh
+      hint: The aggregation quantile takes the value 0.5 as its first argument.
+    - name: count-up-states
+      description: How many targets have each up value
+      type: file
+      source: validation/validate-q4.sh
+      hint: count_values takes the name of the new label as a quoted string. Use the label name state.
+    - name: weighted-error-ratio-bridge
+      description: Error ratio of the bridge job without averaging
+      type: file
+      source: validation/validate-q5.sh
+      hint: Sum the error rate and the total rate of the whole job, then divide once. Do not use avg.
+    - name: average-duration-across-instances
+      description: Average request duration across instances
+      type: file
+      source: validation/validate-q6.sh
+      hint: Divide the rate of the duration sum by the rate of the observation count, both summed over all instances.
+
+teardown:
+  keepCluster: false
