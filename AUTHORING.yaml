@@ -67,7 +67,7 @@ sections:
       path: sections/section-010/module-01/labs/lab-01
       after_reading: sections/section-010/module-01/course-03-expression-types-ranges-and-counting.md
       objective: Write selectors with =, !=, =~ and !~ that return exact populations
-      status: draft
+      status: alpha
       runtime_verification: pending
   - id: module-02
     title: 'Evaluation Time: Lookback, Staleness, Offset And @'
@@ -101,7 +101,7 @@ sections:
       path: sections/section-010/module-02/labs/lab-01
       after_reading: sections/section-010/module-02/course-03-range-queries-step-and-window.md
       objective: Move selectors with offset, negative offset and @
-      status: draft
+      status: alpha
       runtime_verification: pending
 - id: section-020
   title: Rates and Derivatives
@@ -139,7 +139,7 @@ sections:
       path: sections/section-020/module-01/labs/lab-01
       after_reading: sections/section-020/module-01/course-03-counter-resets-and-aggregated-rates.md
       objective: Write rate, increase and irate expressions for counters
-      status: draft
+      status: alpha
       runtime_verification: pending
   - id: module-02
     title: 'Gauges: delta, deriv And predict_linear'
@@ -174,7 +174,7 @@ sections:
       path: sections/section-020/module-02/labs/lab-01
       after_reading: sections/section-020/module-02/course-03-changes-resets-and-choosing-the-function.md
       objective: Use delta, deriv and predict_linear on gauges
-      status: draft
+      status: alpha
       runtime_verification: pending
 - id: section-030
   title: Aggregating Over Time
@@ -215,7 +215,7 @@ sections:
       after_reading: sections/section-030/module-01/course-03-choosing-the-window-and-avoiding-misleading-averages.md
       objective: Reduce a gauge window with min_over_time, quantile_over_time and
         stddev_over_time
-      status: draft
+      status: alpha
       runtime_verification: pending
   - id: module-02
     title: Subqueries And Nested Time Aggregation
@@ -249,7 +249,7 @@ sections:
       path: sections/section-030/module-02/labs/lab-01
       after_reading: sections/section-030/module-02/course-03-cost-recording-rules-and-nesting-pitfalls.md
       objective: Write a subquery with an explicit range and step
-      status: draft
+      status: alpha
       runtime_verification: pending
 - id: section-040
   title: Aggregating Over Dimensions
@@ -286,7 +286,7 @@ sections:
       path: sections/section-040/module-01/labs/lab-01
       after_reading: sections/section-040/module-01/course-03-count-and-cardinality-up.md
       objective: Sum a rate by job and by instance and mode
-      status: draft
+      status: alpha
       runtime_verification: pending
   - id: module-02
     title: topk, bottomk, quantile, count_values And Statistics
@@ -319,7 +319,7 @@ sections:
       path: sections/section-040/module-02/labs/lab-01
       after_reading: sections/section-040/module-02/course-03-correct-averaging-and-hidden-failures.md
       objective: Rank series with topk and bottomk
-      status: draft
+      status: alpha
       runtime_verification: pending
 - id: section-050
   title: Binary Operators
@@ -360,7 +360,7 @@ sections:
       path: sections/section-050/module-01/labs/lab-01
       after_reading: sections/section-050/module-01/course-03-precedence-error-ratio-and-division.md
       objective: Divide two gauges to get a ratio and keep its labels
-      status: draft
+      status: alpha
       runtime_verification: pending
   - id: module-02
     title: Vector Matching And Set Operators
@@ -395,7 +395,7 @@ sections:
       path: sections/section-050/module-02/labs/lab-01
       after_reading: sections/section-050/module-02/course-03-set-operators.md
       objective: Match series with ignoring and on
-      status: draft
+      status: alpha
       runtime_verification: pending
 - id: section-060
   title: Histograms
@@ -437,7 +437,7 @@ sections:
       after_reading: sections/section-060/module-01/course-03-aggregating-buckets-across-instances.md
       objective: Estimate a 0.9 quantile per instance and for the whole service from
         bucket rates
-      status: draft
+      status: alpha
       runtime_verification: pending
   - id: module-02
     title: Means, Fractions And Native Histograms
@@ -472,7 +472,7 @@ sections:
       after_reading: sections/section-060/module-02/course-03-histograms-summaries-and-native-histograms.md
       objective: Compute the mean duration per instance and for the whole service
         from rate of sum and count
-      status: draft
+      status: alpha
       runtime_verification: pending
 - id: section-070
   title: Timestamp Metrics
@@ -512,7 +512,7 @@ sections:
       after_reading: sections/section-070/module-01/course-03-overdue-work-and-units.md
       objective: Compute uptime and backup age with time() minus a timestamp-valued
         metric
-      status: draft
+      status: alpha
       runtime_verification: pending
   - id: module-02
     title: Freshness, Absence And Gaps
@@ -545,5 +545,5 @@ sections:
       path: sections/section-070/module-02/labs/lab-01
       after_reading: sections/section-070/module-02/course-03-restarts-stale-series-and-gaps.md
       objective: Find failing targets with up == 0 and missing series with absent()
-      status: draft
+      status: alpha
       runtime_verification: pending
