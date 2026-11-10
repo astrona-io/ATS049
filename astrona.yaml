@@ -493,7 +493,7 @@ modules:
     - topk
     - bottomk
     - quantile
-    - count_values
+    - count-values
     - weighted-average
     learning_goals:
     - Rank series with topk and bottomk
