@@ -1,3 +1,9 @@
+<p align="center">
+  <a href="https://astrona.io/courses/prometheus-certified-associate">
+    <img src="https://astrona.io/courses/prometheus-certified-associate/domains/ATS049.svg" alt="ATS049: PromQL, part of the Prometheus Certified Associate course on Astrona" width="100%">
+  </a>
+</p>
+
 # PromQL (ATS049)
 
 Prometheus Certified Associate (PCA): PromQL, worth 28% of the official curriculum. This course belongs to ATP010.
